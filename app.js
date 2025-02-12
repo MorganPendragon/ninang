@@ -1,38 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    var modeSwitch = document.querySelector('.mode-switch');
-
-    modeSwitch.addEventListener('click', function () {
-        document.documentElement.classList.toggle('dark');
-        modeSwitch.classList.toggle('active');
-    });
-
-    var listView = document.querySelector('.list-view');
-    var gridView = document.querySelector('.grid-view');
-    var projectsList = document.querySelector('.project-boxes');
-
-    listView.addEventListener('click', function () {
-        gridView.classList.remove('active');
-        listView.classList.add('active');
-        projectsList.classList.remove('jsGridView');
-        projectsList.classList.add('jsListView');
-    });
-
-    gridView.addEventListener('click', function () {
-        gridView.classList.add('active');
-        listView.classList.remove('active');
-        projectsList.classList.remove('jsListView');
-        projectsList.classList.add('jsGridView');
-    });
-
-    document.querySelector('.messages-btn').addEventListener('click', function () {
-        document.querySelector('.messages-section').classList.add('show');
-    });
-
-    document.querySelector('.messages-close').addEventListener('click', function () {
-        document.querySelector('.messages-section').classList.remove('show');
-    });
-});
-document.addEventListener('DOMContentLoaded', function () {
     // Initialize Supabase client
     const supabaseUrl = 'https://hddkqyxhojtgvlautvzx.supabase.co'; // Replace with your URL
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZGtxeXhob2p0Z3ZsYXV0dnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1NTI4ODUsImV4cCI6MjA1NDEyODg4NX0.4FAo2vDcCCjgDACSnJXiDaA_gktK5XgoYTuOPcIG2Cg'; // Replace with your API key
@@ -84,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // Function to create a project box
     function createProjectBox(taskName, priority, progressPercentage, dueDate) {
         let projectBoxWrapper = document.createElement("div");
         projectBoxWrapper.classList.add("project-box-wrapper");
@@ -107,6 +72,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             <circle cx="12" cy="19" r="1" />
                         </svg>
                     </button>
+                    <div class="menu" style="display: none;">
+                        <button class="edit">Edit</button>
+                        <button class="delete">Delete</button>
+                        <button class="mark-done">Mark as Done</button>
+                    </div>
                 </div>
             </div>
             <div class="project-box-content-header">
@@ -135,8 +105,30 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
 
         document.getElementById("projectBoxes").appendChild(projectBox);
-    }
 
+        // Event listeners for the menu buttons
+        const moreButton = projectBox.querySelector(".project-btn-more");
+        const menu = projectBox.querySelector(".menu");
+
+        moreButton.addEventListener("click", () => {
+            menu.style.display = menu.style.display === "none" ? "block" : "none";
+        });
+
+        menu.querySelector(".edit").addEventListener("click", () => {
+            alert("Edit functionality");
+            // Add your edit logic here
+        });
+
+        menu.querySelector(".delete").addEventListener("click", () => {
+            alert("Delete functionality");
+            // Add your delete logic here
+        });
+
+        menu.querySelector(".mark-done").addEventListener("click", () => {
+            alert("Mark as Done functionality");
+            // Add your mark as done logic here
+        });
+    }
     function calculateDaysLeft(dueDate) {
         let deadlineDate = new Date(dueDate);
         let today = new Date();
