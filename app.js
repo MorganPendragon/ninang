@@ -1,38 +1,32 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Initialize Supabase client
-    const supabaseUrl = 'https://hddkqyxhojtgvlautvzx.supabase.co'; // Replace with your URL
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZGtxeXhob2p0Z3ZsYXV0dnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1NTI4ODUsImV4cCI6MjA1NDEyODg4NX0.4FAo2vDcCCjgDACSnJXiDaA_gktK5XgoYTuOPcIG2Cg'; // Replace with your API key
+    const supabaseUrl = 'https://hddkqyxhojtgvlautvzx.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZGtxeXhob2p0Z3ZsYXV0dnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1NTI4ODUsImV4cCI6MjA1NDEyODg4NX0.4FAo2vDcCCjgDACSnJXiDaA_gktK5XgoYTuOPcIG2Cg'; // Replace with your API key';
     const database = supabase.createClient(supabaseUrl, supabaseKey);
 
-    console.log('Supabase client initialized:', database); // Debugging
+    console.log('Supabase client initialized:', database);
 
-    // Function to generate a random color for the project box
     function getRandomColor() {
         const colors = ["#fee4cb", "#e9e7fd", "#ffd3e2", "#c8f7dc", "#d5deff"];
         return colors[Math.floor(Math.random() * colors.length)];
     }
 
-    // Function to add a task
     async function addTask() {
         let taskName = document.getElementById("taskName").value;
         let priority = document.getElementById("priority").value;
         let progressPercentage = document.getElementById("progressPercentage").value;
-        let dueDate = document.getElementById("deadline").value; // Matches database column name
+        let dueDate = document.getElementById("deadline").value;
+        let subTasksInput = document.getElementById("subTasks");
+        let subTasks = subTasksInput ? subTasksInput.value.split(',').map(subTask => subTask.trim()).filter(subTask => subTask !== "") : [];
 
-        if (taskName === "" || progressPercentage === "" || dueDate === "") {
+        if (!taskName || !progressPercentage || !dueDate) {
             alert("Please fill in all fields.");
             return;
         }
 
-        // Insert task into Supabase with due_date
         const { data, error } = await database
             .from('tasks')
-            .insert([{
-                task_name: taskName,
-                priority: priority,
-                progress: progressPercentage,
-                due_date: dueDate // Changed to due_date
-            }]);
+            .insert([{ task_name: taskName, priority, progress: progressPercentage, due_date: dueDate }])
+            .select();
 
         if (error) {
             console.error('Error inserting task:', error);
@@ -40,17 +34,28 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Create a new project box
-        createProjectBox(taskName, priority, progressPercentage, dueDate);
+        const taskId = data[0].id;
 
-        // Clear input fields
-        document.getElementById("taskName").value = "";
-        document.getElementById("progressPercentage").value = "";
-        document.getElementById("deadline").value = "";
+        if (subTasks.length > 0) {
+            const subtaskInserts = subTasks.map(subTask => ({ task_id: taskId, subtask_name: subTask, completed: false }));
+            await database.from('subtasks').insert(subtaskInserts);
+        }
+
+        fetchTasks();
     }
 
+    async function deleteTask(taskId) {
+        await database.from('tasks').delete().eq('id', taskId);
+        await database.from('subtasks').delete().eq('task_id', taskId);
+        fetchTasks();
+    }
 
-    function createProjectBox(taskName, priority, progressPercentage, dueDate) {
+    async function deleteSubtask(taskId, subtaskName) {
+        await database.from('subtasks').delete().eq('task_id', taskId).eq('subtask_name', subtaskName);
+        fetchTasks();
+    }
+
+    function createProjectBox(taskId, taskName, priority, progressPercentage, dueDate, subTasks) {
         let projectBoxWrapper = document.createElement("div");
         projectBoxWrapper.classList.add("project-box-wrapper");
 
@@ -58,26 +63,19 @@ document.addEventListener('DOMContentLoaded', function () {
         projectBox.classList.add("project-box");
         projectBox.style.backgroundColor = getRandomColor();
 
-        // Calculate days left
+        let subTaskHtml = subTasks.length > 0 ? `<p>Subtasks:</p><ul>${subTasks.map(subTask => `<li><input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask}'> ${subTask} <button class='delete-subtask' data-task-id='${taskId}' data-subtask='${subTask}'>❌</button></li>`).join('')}</ul>` : "";
+
+        let formattedDueDate = new Date(dueDate).toLocaleDateString('en-US', {
+            month: 'long', day: 'numeric', year: 'numeric'
+        });
+
         let daysLeftText = calculateDaysLeft(dueDate);
 
         projectBox.innerHTML = `
+            <input type='checkbox' class='task-checkbox' data-task-id='${taskId}'>
             <div class="project-box-header">
-                <span>${new Date().toLocaleDateString()}</span>
-                <div class="more-wrapper">
-                    <button class="project-btn-more">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-vertical">
-                            <circle cx="12" cy="12" r="1" />
-                            <circle cx="12" cy="5" r="1" />
-                            <circle cx="12" cy="19" r="1" />
-                        </svg>
-                    </button>
-                    <div class="menu" style="display: none;">
-                        <button class="edit">Edit</button>
-                        <button class="delete">Delete</button>
-                        <button class="mark-done">Mark as Done</button>
-                    </div>
-                </div>
+                <span>Created: ${new Date().toLocaleDateString()}</span>
+                <span class="deadline">Deadline: ${formattedDueDate} (${daysLeftText})</span>
             </div>
             <div class="project-box-content-header">
                 <p class="box-content-header">${taskName}</p>
@@ -90,45 +88,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <p class="box-progress-percentage">${progressPercentage}%</p>
             </div>
-            <div class="project-box-footer">
-                <div class="participants">
-                    <button class="add-participant" style="color: #ff942e;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="days-left" style="color: #ff942e;">
-                    ${daysLeftText}
-                </div>
+            <div class="subtask-list">
+                ${subTaskHtml}
             </div>
+            <button class='edit-task' data-task-id='${taskId}'>✏️ Edit</button>
+            <button class='delete-task' data-task-id='${taskId}'>❌ Delete</button>
         `;
 
+        projectBox.querySelector('.delete-task').addEventListener('click', () => deleteTask(taskId));
+        projectBox.querySelectorAll('.delete-subtask').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const subtaskName = event.target.getAttribute('data-subtask');
+                deleteSubtask(taskId, subtaskName);
+            });
+        });
         document.getElementById("projectBoxes").appendChild(projectBox);
-
-        // Event listeners for the menu buttons
-        const moreButton = projectBox.querySelector(".project-btn-more");
-        const menu = projectBox.querySelector(".menu");
-
-        moreButton.addEventListener("click", () => {
-            menu.style.display = menu.style.display === "none" ? "block" : "none";
-        });
-
-        menu.querySelector(".edit").addEventListener("click", () => {
-            alert("Edit functionality");
-            // Add your edit logic here
-        });
-
-        menu.querySelector(".delete").addEventListener("click", () => {
-            alert("Delete functionality");
-            // Add your delete logic here
-        });
-
-        menu.querySelector(".mark-done").addEventListener("click", () => {
-            alert("Mark as Done functionality");
-            // Add your mark as done logic here
-        });
     }
+
     function calculateDaysLeft(dueDate) {
         let deadlineDate = new Date(dueDate);
         let today = new Date();
@@ -143,89 +119,34 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-
-
-    // Function to fetch tasks
     async function fetchTasks() {
-        const { data, error } = await database
+        const { data: tasks, error: taskError } = await database
             .from('tasks')
             .select('*');
 
-        if (error) {
-            console.error('Error fetching tasks:', error);
+        if (taskError) {
+            console.error('Error fetching tasks:', taskError);
             return;
         }
 
-        console.log('Fetched tasks:', data);
-
-        // Clear existing project boxes
         document.getElementById("projectBoxes").innerHTML = '';
 
-        // Create a project box for each task
-        data.forEach(task => {
-            createProjectBox(task.task_name, task.priority, task.progress, task.due_date);
-        });
-    }
+        for (let task of tasks) {
+            const { data: subtasks, error: subtaskError } = await database
+                .from('subtasks')
+                .select('subtask_name')
+                .eq('task_id', task.id);
 
-    async function fetchTasks() {
-        const { data, error } = await database
-            .from('tasks')
-            .select('*');
-
-        if (error) {
-            console.error('Error fetching tasks:', error);
-            return;
-        }
-
-        console.log('Fetched tasks:', data);
-
-        // Clear existing project boxes
-        document.getElementById("projectBoxes").innerHTML = '';
-
-        let now = new Date();
-        let deadlinePast = 0;
-        let workingOnIt = 0;
-        let totalTasks = data.length;
-
-        // Loop through each task
-        data.forEach(task => {
-            let taskDeadline = new Date(task.due_date);
-
-            if (taskDeadline < now) {
-                deadlinePast++; // Task is overdue
-            } else {
-                workingOnIt++; // Task is still active
+            if (subtaskError) {
+                console.error('Error fetching subtasks:', subtaskError);
+                continue;
             }
 
-            // Create a project box for each task
-            createProjectBox(task.task_name, task.priority, task.progress, task.due_date);
-        });
-
-        // Update the UI with the task counts
-        document.querySelector('.status-number.deadline-past').textContent = deadlinePast;
-        document.querySelector('.status-number.working-on-it').textContent = workingOnIt;
-        document.querySelector('.status-number.total-tasks').textContent = totalTasks;
+            let subTaskNames = subtasks.map(subtask => subtask.subtask_name);
+            createProjectBox(task.id, task.task_name, task.priority, task.progress, task.due_date, subTaskNames);
+        }
     }
-
-    // Fetch tasks on page load
-    fetchTasks();
-
 
     document.querySelector('.task button').addEventListener('click', addTask);
-
-    function updateDateTime() {
-        const now = new Date();
-        const options = { month: 'long', day: 'numeric', year: 'numeric' };
-        document.querySelector('.time').textContent = now.toLocaleDateString('en-US', options);
-    }
-
-    // Update immediately
-    updateDateTime();
-
-    // Refresh every second (optional)
-    setInterval(updateDateTime, 1000);
-
-
-    // Fetch tasks on page load
     fetchTasks();
 });
