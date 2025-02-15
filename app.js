@@ -73,10 +73,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         projectBox.innerHTML = `
             <input type='checkbox' class='task-checkbox' data-task-id='${taskId}'>
-            <div class="project-box-header">
-                <span>Created: ${new Date().toLocaleDateString()}</span>
-                <span class="deadline">Deadline: ${formattedDueDate} (${daysLeftText})</span>
-            </div>
             <div class="project-box-content-header">
                 <p class="box-content-header">${taskName}</p>
                 <p class="box-content-subheader">${priority}</p>
@@ -91,6 +87,18 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="subtask-list">
                 ${subTaskHtml}
             </div>
+            <div class="project-box-footer">
+                <div class="participants">
+                    <button class="add-participant" style="color: #ff942e;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="days-left" style="color: #ff942e;">
+                    ${daysLeftText}
+                </div>
+            </div>
             <button class='edit-task' data-task-id='${taskId}'>✏️ Edit</button>
             <button class='delete-task' data-task-id='${taskId}'>❌ Delete</button>
         `;
@@ -102,6 +110,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 deleteSubtask(taskId, subtaskName);
             });
         });
+
+
+
         document.getElementById("projectBoxes").appendChild(projectBox);
     }
 
@@ -131,6 +142,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById("projectBoxes").innerHTML = '';
 
+        let now = new Date();
+        let deadlinePast = 0;
+        let workingOnIt = 0;
+        let totalTasks = tasks.length;
+
         for (let task of tasks) {
             const { data: subtasks, error: subtaskError } = await database
                 .from('subtasks')
@@ -144,9 +160,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let subTaskNames = subtasks.map(subtask => subtask.subtask_name);
             createProjectBox(task.id, task.task_name, task.priority, task.progress, task.due_date, subTaskNames);
+
+            let taskDeadline = new Date(task.due_date);
+
+            if (taskDeadline < now) {
+                deadlinePast++; // Task is overdue
+            } else {
+                workingOnIt++; // Task is still active
+            }
         }
+
+        // Update the UI with the task counts
+        document.querySelector('.status-number.deadline-past').textContent = deadlinePast;
+        document.querySelector('.status-number.working-on-it').textContent = workingOnIt;
+        document.querySelector('.status-number.total-tasks').textContent = totalTasks;
     }
 
     document.querySelector('.task button').addEventListener('click', addTask);
+
+    function updateDateTime() {
+        const now = new Date();
+        const options = { month: 'long', day: 'numeric', year: 'numeric' };
+        document.querySelector('.time').textContent = now.toLocaleDateString('en-US', options);
+    }
+
+    // Update immediately
+    updateDateTime();
+
+    // Refresh every second (optional)
+    setInterval(updateDateTime, 1000);
+
+    // Fetch tasks on page load
     fetchTasks();
 });
