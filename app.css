@@ -528,7 +528,7 @@ button, a {
     display: flex;
     border-radius: 10px;
     position: relative;
-    width: 100%;
+    width: 98%;
 }
 
 .project-boxes.jsListView .project-box>* {
@@ -953,6 +953,222 @@ button, a {
 .fc-event:hover {
     opacity: 0.8;
 }
+
+
+/* Project Box Styles */
+.project-box {
+    --main-color-card: #dbf6fd; /* Default light mode card color */
+    border-radius: 16px; /* Rounded corners */
+    padding: 16px; /* Spacing inside the box */
+    background-color: var(--main-color-card); /* Use the card color variable */
+    margin-bottom: 16px; /* Spacing between project boxes */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+}
+
+.project-box:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Hover effect */
+}
+
+/* Project Box Header */
+.project-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px; /* Spacing below the header */
+}
+
+.project-box-header .box-content-header {
+    font-size: 18px; /* Larger font size for the task name */
+    font-weight: 700; /* Bold text */
+    color: var(--main-color); /* Use the main text color */
+    margin: 0; /* Remove default margin */
+}
+
+.project-box-header .box-content-subheader {
+    font-size: 14px; /* Smaller font size for the priority */
+    color: var(--secondary-color); /* Use the secondary text color */
+    margin: 0; /* Remove default margin */
+}
+
+/* Progress Bar */
+.box-progress-wrapper {
+    margin-bottom: 16px; /* Spacing below the progress bar */
+}
+
+.box-progress-header {
+    font-size: 14px; /* Font size for the progress header */
+    color: var(--secondary-color); /* Use the secondary text color */
+    margin-bottom: 8px; /* Spacing below the header */
+}
+
+.box-progress-bar {
+    width: 100%;
+    height: 8px; /* Height of the progress bar */
+    background-color: rgba(255, 255, 255, 0.3); /* Light background for the bar */
+    border-radius: 4px; /* Rounded corners */
+    overflow: hidden; /* Ensure the progress bar doesn't overflow */
+}
+
+.box-progress {
+    height: 100%;
+    background-color: #ff942e; /* Progress bar color */
+    border-radius: 4px; /* Rounded corners */
+    transition: width 0.3s ease; /* Smooth transition for progress */
+}
+
+.box-progress-percentage {
+    font-size: 12px; /* Font size for the percentage */
+    color: var(--secondary-color); /* Use the secondary text color */
+    text-align: right; /* Align to the right */
+    margin-top: 4px; /* Spacing above the percentage */
+}
+
+/* Subtask List */
+.subtask-list {
+    margin-bottom: 16px; /* Spacing below the subtask list */
+}
+
+.subtask-list p {
+    font-size: 14px; /* Font size for the subtask header */
+    color: var(--secondary-color); /* Use the secondary text color */
+    margin-bottom: 8px; /* Spacing below the header */
+}
+
+.subtask-list ul {
+    list-style-type: none; /* Remove bullet points */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+.subtask-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px; /* Spacing between subtasks */
+}
+
+.subtask-list input[type="checkbox"] {
+    margin-right: 8px; /* Spacing between checkbox and text */
+}
+
+.subtask-list .check-subtask,
+.subtask-list .delete-subtask {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 8px; /* Spacing between buttons */
+    color: var(--secondary-color); /* Use the secondary text color */
+    transition: color 0.3s ease; /* Smooth transition for hover */
+}
+
+.subtask-list .check-subtask:hover,
+.subtask-list .delete-subtask:hover {
+    color: var(--main-color); /* Change color on hover */
+}
+
+/* Project Box Footer */
+.project-box-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px; /* Spacing above the footer */
+    border-top: 1px solid var(--message-box-border); /* Divider line */
+}
+
+.participants {
+    display: flex;
+    align-items: center;
+}
+
+.participants img {
+    width: 24px; /* Size of participant avatars */
+    height: 24px;
+    border-radius: 50%; /* Circular avatars */
+    margin-right: -8px; /* Overlap avatars slightly */
+    border: 2px solid var(--projects-section); /* Border to separate avatars */
+}
+
+.add-participant {
+    width: 24px; /* Size of the add participant button */
+    height: 24px;
+    border-radius: 50%; /* Circular button */
+    background-color: var(--button-bg); /* Use the button background color */
+    color: var(--link-color-active); /* Use the active link color */
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+
+.add-participant:hover {
+    background-color: var(--link-color-hover); /* Change color on hover */
+}
+
+.days-left {
+    font-size: 12px; /* Font size for the days left text */
+    color: var(--secondary-color); /* Use the secondary text color */
+    background-color: rgba(255, 255, 255, 0.3); /* Light background */
+    padding: 4px 8px; /* Padding inside the badge */
+    border-radius: 12px; /* Rounded corners */
+}
+
+/* Edit and Delete Buttons */
+.edit-task,
+.delete-task {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--secondary-color); /* Use the secondary text color */
+    font-size: 14px; /* Font size for the buttons */
+    margin-top: 8px; /* Spacing above the buttons */
+    transition: color 0.3s ease; /* Smooth transition for hover */
+}
+
+.edit-task:hover,
+.delete-task:hover {
+    color: var(--main-color); /* Change color on hover */
+}
+
+/* Dark Mode Compatibility */
+.dark .project-box {
+    --main-color-card: #2f3142; /* Dark mode card color */
+    background-color: var(--main-color-card);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Darker shadow for dark mode */
+}
+
+.dark .project-box:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Darker hover effect */
+}
+
+.dark .box-progress-bar {
+    background-color: rgba(0, 0, 0, 0.3); /* Darker background for progress bar */
+}
+
+.dark .subtask-list .check-subtask,
+.dark .subtask-list .delete-subtask {
+    color: var(--secondary-color); /* Use the secondary text color */
+}
+
+.dark .subtask-list .check-subtask:hover,
+.dark .subtask-list .delete-subtask:hover {
+    color: var(--main-color); /* Change color on hover */
+}
+
+.dark .add-participant {
+    background-color: var(--button-bg); /* Use the button background color */
+    color: var(--link-color-active); /* Use the active link color */
+}
+
+.dark .add-participant:hover {
+    background-color: var(--link-color-hover); /* Change color on hover */
+}
+
+.dark .days-left {
+    background-color: rgba(0, 0, 0, 0.3); /* Darker background for days left */
+}
+
 
 
 /* Modal Styles */

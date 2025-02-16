@@ -8,6 +8,39 @@ document.addEventListener('DOMContentLoaded', function () {
     let isEditMode = false; // Track if we're in edit mode
     let currentTaskId = null; // Track the task being edited
 
+    const modal = document.getElementById('taskManagerModal');
+    const addBtn = document.querySelector('.add-btn');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const addTaskBtn = document.getElementById('addTask');
+
+    // Open modal when "Add New Project" button is clicked
+    addBtn.addEventListener('click', () => {
+        modal.style.display = 'flex'; // Show the modal
+        clearForm(); // Clear the form when opening the modal
+    });
+
+    // Close modal when the close button is clicked
+    closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none'; // Hide the modal
+    });
+
+    // Close modal when clicking outside the modal
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none'; // Hide the modal
+        }
+    });
+
+    // Ensure the event listener is only added once
+    addTaskBtn.removeEventListener('click', handleAddTask); // Remove existing listener
+    addTaskBtn.addEventListener('click', handleAddTask); // Add new listener
+
+    function handleAddTask() {
+        addTask().then(() => {
+            modal.style.display = 'none'; // Hide the modal after adding/editing
+        });
+    }
+
     function getRandomColor() {
         const colors = ["#fee4cb", "#e9e7fd", "#ffd3e2", "#c8f7dc", "#d5deff"];
         return colors[Math.floor(Math.random() * colors.length)];
@@ -187,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <li>
                 <input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}' ${subTask.completed ? 'checked' : ''}>
                 ${subTask.subtask_name}
-                <button class='check-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>✔</button>
+                <button class='check-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>✅</button>
                 <button class='delete-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>❌</button>
             </li>
         `).join('')}</ul>` : "";
@@ -195,7 +228,8 @@ document.addEventListener('DOMContentLoaded', function () {
         let daysLeftText = calculateDaysLeft(dueDate);
 
         projectBox.innerHTML = `
-            <input type='checkbox' class='task-checkbox' data-task-id='${taskId}'>
+            <button class="edit-task" data-task-id="${taskId}">✏️</button>
+            <button class='delete-task' data-task-id='${taskId}'>❌</button>
             <div class="project-box-content-header">
                 <p class="box-content-header">${taskName}</p>
                 <p class="box-content-subheader">${priority}</p>
@@ -211,19 +245,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 ${subTaskHtml}
             </div>
             <div class="project-box-footer">
-                <div class="participants">
-                    <button class="add-participant" style="color: #ff942e;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                    </button>
-                </div>
                 <div class="days-left" data-task-id='${taskId}' data-due-date='${dueDate}'>
                     ${progressPercentage === 100 ? "Completed" : daysLeftText}
                 </div>
             </div>
-            <button class="edit-task" data-task-id="${taskId}">✏️ Edit Task</button>
-            <button class='delete-task' data-task-id='${taskId}'>❌ Delete Task</button>
         `;
 
         projectBox.querySelector('.delete-task').addEventListener('click', () => deleteTask(taskId));
@@ -243,6 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
+        // Add event listener for the edit-task button
         projectBox.querySelector('.edit-task').addEventListener('click', () => {
             // Populate the form with task details
             document.getElementById("taskName").value = taskName;
@@ -259,6 +285,7 @@ document.addEventListener('DOMContentLoaded', function () {
             isEditMode = true;
             currentTaskId = taskId;
             document.getElementById("addTask").textContent = "Save Task"; // Change button text
+            modal.style.display = 'flex'; // Show the modal
         });
 
         document.getElementById("projectBoxes").appendChild(projectBox);
@@ -332,8 +359,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelector('.status-number.total-tasks').textContent = totalTasks;
     }
 
-    document.getElementById("addTask").addEventListener('click', addTask);
-
     function updateDateTime() {
         const now = new Date();
         const options = { month: 'long', day: 'numeric', year: 'numeric' };
@@ -348,71 +373,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Fetch tasks on page load
     fetchTasks();
-});
-
-
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('taskManagerModal');
-    const addBtn = document.querySelector('.add-btn');
-    const closeModalBtn = document.querySelector('.close-modal');
-    const addTaskBtn = document.getElementById('addTask');
-
-    // Open modal when "Add New Project" button is clicked
-    addBtn.addEventListener('click', () => {
-        modal.style.display = 'flex'; // Show the modal
-        clearForm(); // Clear the form when opening the modal
-    });
-
-    // Close modal when the close button is clicked
-    closeModalBtn.addEventListener('click', () => {
-        modal.style.display = 'none'; // Hide the modal
-    });
-
-    // Close modal when clicking outside the modal
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none'; // Hide the modal
-        }
-    });
-
-    // Handle task addition/editing
-    addTaskBtn.addEventListener('click', () => {
-        addTask().then(() => {
-            modal.style.display = 'none'; // Hide the modal after adding/editing
-        });
-    });
-
-    // Edit task functionality
-    document.addEventListener('click', (event) => {
-        if (event.target.classList.contains('edit-task')) {
-            const taskId = event.target.getAttribute('data-task-id');
-            const taskBox = event.target.closest('.project-box');
-            const taskName = taskBox.querySelector('.box-content-header').textContent;
-            const priority = taskBox.querySelector('.box-content-subheader').textContent;
-            const dueDate = taskBox.querySelector('.days-left').getAttribute('data-due-date');
-
-            // Populate the form with task details
-            document.getElementById('taskName').value = taskName;
-            document.getElementById('priority').value = priority;
-            document.getElementById('deadline').value = dueDate;
-
-            // Fetch subtasks and populate subtask inputs
-            database
-                .from('subtasks')
-                .select('*')
-                .eq('task_id', taskId)
-                .then(({ data: subtasks }) => {
-                    const subtaskInputs = document.querySelectorAll('.subtask-input');
-                    subtaskInputs.forEach((input, index) => {
-                        input.value = subtasks[index]?.subtask_name || '';
-                    });
-                });
-
-            // Enter edit mode
-            isEditMode = true;
-            currentTaskId = taskId;
-            addTaskBtn.textContent = 'Save Task'; // Change button text
-            modal.style.display = 'flex'; // Show the modal automatically
-        }
-    });
 });
