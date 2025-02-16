@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     console.log('Supabase client initialized:', database);
 
+    let isEditMode = false; // Track if we're in edit mode
+    let currentTaskId = null; // Track the task being edited
+
     function getRandomColor() {
         const colors = ["#fee4cb", "#e9e7fd", "#ffd3e2", "#c8f7dc", "#d5deff"];
         return colors[Math.floor(Math.random() * colors.length)];
@@ -13,35 +16,60 @@ document.addEventListener('DOMContentLoaded', function () {
     async function addTask() {
         let taskName = document.getElementById("taskName").value;
         let priority = document.getElementById("priority").value;
-        let progressPercentage = document.getElementById("progressPercentage").value;
         let dueDate = document.getElementById("deadline").value;
-        let subTasksInput = document.getElementById("subTasks");
-        let subTasks = subTasksInput ? subTasksInput.value.split(',').map(subTask => subTask.trim()).filter(subTask => subTask !== "") : [];
 
-        if (!taskName || !progressPercentage || !dueDate) {
+        // Collect subtasks from individual inputs
+        const subtaskInputs = document.querySelectorAll('.subtask-input');
+        let subTasks = Array.from(subtaskInputs)
+            .map(input => input.value.trim())
+            .filter(subTask => subTask !== "");
+
+        if (!taskName || !dueDate) {
             alert("Please fill in all fields.");
             return;
         }
 
-        const { data, error } = await database
-            .from('tasks')
-            .insert([{ task_name: taskName, priority, progress: progressPercentage, due_date: dueDate }])
-            .select();
-
-        if (error) {
-            console.error('Error inserting task:', error);
-            alert('Failed to add task. Please try again.');
+        // Validate subtask limit (max 4 subtasks)
+        if (subTasks.length > 4) {
+            alert("You can only add up to 4 subtasks.");
             return;
         }
 
-        const taskId = data[0].id;
+        if (isEditMode) {
+            // Update existing task
+            await editTask(currentTaskId, taskName, priority, dueDate, subTasks);
+            isEditMode = false; // Exit edit mode
+            currentTaskId = null; // Reset current task ID
+            document.getElementById("addTask").textContent = "Add Task"; // Change button text back
+        } else {
+            // Add new task
+            const { data, error } = await database
+                .from('tasks')
+                .insert([{ task_name: taskName, priority, progress: 0, due_date: dueDate }])
+                .select();
 
-        if (subTasks.length > 0) {
-            const subtaskInserts = subTasks.map(subTask => ({ task_id: taskId, subtask_name: subTask, completed: false }));
-            await database.from('subtasks').insert(subtaskInserts);
+            if (error) {
+                console.error('Error inserting task:', error);
+                alert('Failed to add task. Please try again.');
+                return;
+            }
+
+            const taskId = data[0].id;
+
+            if (subTasks.length > 0) {
+                // Insert subtasks in order
+                const subtaskInserts = subTasks.map((subTask, index) => ({
+                    task_id: taskId,
+                    subtask_name: subTask,
+                    completed: false,
+                    order: index + 1, // Add an order field to track the order
+                }));
+                await database.from('subtasks').insert(subtaskInserts);
+            }
         }
 
         fetchTasks();
+        clearForm(); // Clear the form after adding/editing
     }
 
     async function deleteTask(taskId) {
@@ -55,6 +83,95 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchTasks();
     }
 
+    async function toggleSubtaskCompletion(taskId, subtaskName, isCompleted) {
+        await database
+            .from('subtasks')
+            .update({ completed: isCompleted })
+            .eq('task_id', taskId)
+            .eq('subtask_name', subtaskName);
+
+        updateProgressBar(taskId);
+    }
+
+    async function editTask(taskId, taskName, priority, dueDate, subTasks) {
+        // Validate subtask limit (max 4 subtasks)
+        if (subTasks.length > 4) {
+            alert("You can only add up to 4 subtasks.");
+            return;
+        }
+
+        // Update task details
+        const { error: taskError } = await database
+            .from('tasks')
+            .update({ task_name: taskName, priority, due_date: dueDate })
+            .eq('id', taskId);
+
+        if (taskError) {
+            console.error('Error updating task:', taskError);
+            alert('Failed to update task. Please try again.');
+            return;
+        }
+
+        // Fetch existing subtasks
+        const { data: existingSubtasks, error: subtaskError } = await database
+            .from('subtasks')
+            .select('*')
+            .eq('task_id', taskId);
+
+        if (subtaskError) {
+            console.error('Error fetching subtasks:', subtaskError);
+            return;
+        }
+
+        // Delete existing subtasks
+        await database.from('subtasks').delete().eq('task_id', taskId);
+
+        // Insert updated subtasks in order
+        if (subTasks.length > 0) {
+            const subtaskInserts = subTasks.map((subTask, index) => ({
+                task_id: taskId,
+                subtask_name: subTask,
+                completed: false,
+                order: index + 1, // Add an order field to track the order
+            }));
+            await database.from('subtasks').insert(subtaskInserts);
+        }
+    }
+
+    function updateProgressBar(taskId) {
+        const subtaskCheckboxes = document.querySelectorAll(`.subtask-checkbox[data-task-id='${taskId}']`);
+        const progressBar = document.querySelector(`.box-progress[data-task-id='${taskId}']`);
+        const progressPercentage = document.querySelector(`.box-progress-percentage[data-task-id='${taskId}']`);
+        const daysLeftText = document.querySelector(`.days-left[data-task-id='${taskId}']`);
+
+        if (!progressBar || !progressPercentage || !daysLeftText) return;
+
+        const totalSubtasks = subtaskCheckboxes.length;
+        const completedSubtasks = Array.from(subtaskCheckboxes).filter(checkbox => checkbox.checked).length;
+        const progress = totalSubtasks === 0 ? 0 : Math.round((completedSubtasks / totalSubtasks) * 100);
+
+        progressBar.style.width = `${progress}%`;
+        progressPercentage.textContent = `${progress}%`;
+
+        // Update "Days Left" text if progress is 100%
+        if (progress === 100) {
+            daysLeftText.textContent = "Completed";
+        } else {
+            const dueDate = daysLeftText.getAttribute('data-due-date');
+            const daysLeft = calculateDaysLeft(dueDate);
+            daysLeftText.textContent = daysLeft;
+        }
+
+        // Update progress in the database
+        database
+            .from('tasks')
+            .update({ progress: progress })
+            .eq('id', taskId)
+            .then(({ error }) => {
+                if (error) console.error('Error updating progress:', error);
+            });
+    }
+
     function createProjectBox(taskId, taskName, priority, progressPercentage, dueDate, subTasks) {
         let projectBoxWrapper = document.createElement("div");
         projectBoxWrapper.classList.add("project-box-wrapper");
@@ -63,11 +180,17 @@ document.addEventListener('DOMContentLoaded', function () {
         projectBox.classList.add("project-box");
         projectBox.style.backgroundColor = getRandomColor();
 
-        let subTaskHtml = subTasks.length > 0 ? `<p>Subtasks:</p><ul>${subTasks.map(subTask => `<li><input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask}'> ${subTask} <button class='delete-subtask' data-task-id='${taskId}' data-subtask='${subTask}'>❌</button></li>`).join('')}</ul>` : "";
+        // Sort subtasks by their order
+        subTasks.sort((a, b) => a.order - b.order);
 
-        let formattedDueDate = new Date(dueDate).toLocaleDateString('en-US', {
-            month: 'long', day: 'numeric', year: 'numeric'
-        });
+        let subTaskHtml = subTasks.length > 0 ? `<p>Subtasks:</p><ul>${subTasks.map(subTask => `
+            <li>
+                <input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}' ${subTask.completed ? 'checked' : ''}>
+                ${subTask.subtask_name}
+                <button class='check-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>✔</button>
+                <button class='delete-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>❌</button>
+            </li>
+        `).join('')}</ul>` : "";
 
         let daysLeftText = calculateDaysLeft(dueDate);
 
@@ -80,9 +203,9 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="box-progress-wrapper">
                 <p class="box-progress-header">Progress</p>
                 <div class="box-progress-bar">
-                    <span class="box-progress" style="width: ${progressPercentage}%; background-color: #ff942e"></span>
+                    <span class="box-progress" data-task-id='${taskId}' style="width: ${progressPercentage}%; background-color: #ff942e"></span>
                 </div>
-                <p class="box-progress-percentage">${progressPercentage}%</p>
+                <p class="box-progress-percentage" data-task-id='${taskId}'>${progressPercentage}%</p>
             </div>
             <div class="subtask-list">
                 ${subTaskHtml}
@@ -95,12 +218,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         </svg>
                     </button>
                 </div>
-                <div class="days-left" style="color: #ff942e;">
-                    ${daysLeftText}
+                <div class="days-left" data-task-id='${taskId}' data-due-date='${dueDate}'>
+                    ${progressPercentage === 100 ? "Completed" : daysLeftText}
                 </div>
             </div>
-            <button class='edit-task' data-task-id='${taskId}'>✏️ Edit</button>
-            <button class='delete-task' data-task-id='${taskId}'>❌ Delete</button>
+            <button class="edit-task" data-task-id="${taskId}">✏️ Edit Task</button>
+            <button class='delete-task' data-task-id='${taskId}'>❌ Delete Task</button>
         `;
 
         projectBox.querySelector('.delete-task').addEventListener('click', () => deleteTask(taskId));
@@ -111,7 +234,32 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
+        projectBox.querySelectorAll('.check-subtask').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const subtaskName = event.target.getAttribute('data-subtask');
+                const checkbox = event.target.parentElement.querySelector('.subtask-checkbox');
+                const isCompleted = checkbox.checked;
+                toggleSubtaskCompletion(taskId, subtaskName, isCompleted);
+            });
+        });
 
+        projectBox.querySelector('.edit-task').addEventListener('click', () => {
+            // Populate the form with task details
+            document.getElementById("taskName").value = taskName;
+            document.getElementById("priority").value = priority;
+            document.getElementById("deadline").value = dueDate;
+
+            // Populate subtask inputs
+            const subtaskInputs = document.querySelectorAll('.subtask-input');
+            subtaskInputs.forEach((input, index) => {
+                input.value = subTasks[index]?.subtask_name || "";
+            });
+
+            // Enter edit mode
+            isEditMode = true;
+            currentTaskId = taskId;
+            document.getElementById("addTask").textContent = "Save Task"; // Change button text
+        });
 
         document.getElementById("projectBoxes").appendChild(projectBox);
     }
@@ -128,6 +276,14 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             return `${difference} Days Left`;
         }
+    }
+
+    function clearForm() {
+        document.getElementById("taskName").value = "";
+        document.getElementById("priority").value = "High";
+        document.getElementById("deadline").value = "";
+        const subtaskInputs = document.querySelectorAll('.subtask-input');
+        subtaskInputs.forEach(input => input.value = "");
     }
 
     async function fetchTasks() {
@@ -150,16 +306,16 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let task of tasks) {
             const { data: subtasks, error: subtaskError } = await database
                 .from('subtasks')
-                .select('subtask_name')
-                .eq('task_id', task.id);
+                .select('*')
+                .eq('task_id', task.id)
+                .order('order', { ascending: true }); // Fetch subtasks in order
 
             if (subtaskError) {
                 console.error('Error fetching subtasks:', subtaskError);
                 continue;
             }
 
-            let subTaskNames = subtasks.map(subtask => subtask.subtask_name);
-            createProjectBox(task.id, task.task_name, task.priority, task.progress, task.due_date, subTaskNames);
+            createProjectBox(task.id, task.task_name, task.priority, task.progress, task.due_date, subtasks);
 
             let taskDeadline = new Date(task.due_date);
 
@@ -176,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelector('.status-number.total-tasks').textContent = totalTasks;
     }
 
-    document.querySelector('.task button').addEventListener('click', addTask);
+    document.getElementById("addTask").addEventListener('click', addTask);
 
     function updateDateTime() {
         const now = new Date();
@@ -192,4 +348,71 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Fetch tasks on page load
     fetchTasks();
+});
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('taskManagerModal');
+    const addBtn = document.querySelector('.add-btn');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const addTaskBtn = document.getElementById('addTask');
+
+    // Open modal when "Add New Project" button is clicked
+    addBtn.addEventListener('click', () => {
+        modal.style.display = 'flex'; // Show the modal
+        clearForm(); // Clear the form when opening the modal
+    });
+
+    // Close modal when the close button is clicked
+    closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none'; // Hide the modal
+    });
+
+    // Close modal when clicking outside the modal
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none'; // Hide the modal
+        }
+    });
+
+    // Handle task addition/editing
+    addTaskBtn.addEventListener('click', () => {
+        addTask().then(() => {
+            modal.style.display = 'none'; // Hide the modal after adding/editing
+        });
+    });
+
+    // Edit task functionality
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('edit-task')) {
+            const taskId = event.target.getAttribute('data-task-id');
+            const taskBox = event.target.closest('.project-box');
+            const taskName = taskBox.querySelector('.box-content-header').textContent;
+            const priority = taskBox.querySelector('.box-content-subheader').textContent;
+            const dueDate = taskBox.querySelector('.days-left').getAttribute('data-due-date');
+
+            // Populate the form with task details
+            document.getElementById('taskName').value = taskName;
+            document.getElementById('priority').value = priority;
+            document.getElementById('deadline').value = dueDate;
+
+            // Fetch subtasks and populate subtask inputs
+            database
+                .from('subtasks')
+                .select('*')
+                .eq('task_id', taskId)
+                .then(({ data: subtasks }) => {
+                    const subtaskInputs = document.querySelectorAll('.subtask-input');
+                    subtaskInputs.forEach((input, index) => {
+                        input.value = subtasks[index]?.subtask_name || '';
+                    });
+                });
+
+            // Enter edit mode
+            isEditMode = true;
+            currentTaskId = taskId;
+            addTaskBtn.textContent = 'Save Task'; // Change button text
+            modal.style.display = 'flex'; // Show the modal automatically
+        }
+    });
 });

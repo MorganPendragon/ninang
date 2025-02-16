@@ -1,9 +1,10 @@
-
 @charset "UTF-8";
 @import url("https://fonts.googleapis.com/css?family=DM+Sans:400,500,700&display=swap");
 
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 :root {
@@ -47,33 +48,29 @@
     --message-btn: rgba(195, 207, 244, 0.1);
 }
 
-html,
-body {
+html, body {
+    font-family: "DM Sans", sans-serif;
+    background-color: var(--app-container);
     width: 100%;
     height: 100vh;
     margin: 0;
-}
-
-body {
-    font-family: "DM Sans", sans-serif;
+    padding: 0;
     overflow: hidden;
-    /* display: flex; */
-    justify-content: center;
-    background-color: var(--app-container);
 }
 
-button,
-a {
+button, a {
     cursor: pointer;
 }
 
 .app-container {
     width: 100%;
     height: 100vh;
+    display: flex;
     flex-direction: column;
     background-color: var(--app-container);
     transition: 0.2s;
     max-width: 1800px;
+    margin: 0 auto;
 }
 
 .app-container button,
@@ -86,7 +83,7 @@ a {
 
 .app-content {
     display: flex;
-    height: 100%;
+    height: calc(100vh - 80px); /* Adjust height to account for header */
     overflow: hidden;
     padding: 16px 24px 24px 0;
 }
@@ -98,6 +95,8 @@ a {
     width: 100%;
     padding: 16px 24px;
     position: relative;
+    background-color: var(--app-container);
+    z-index: 2;
 }
 
 .app-header-left,
@@ -191,7 +190,7 @@ a {
     color: var(--main-color);
 }
 
-.search-input:placeholder {
+.search-input::placeholder {
     color: var(--main-color);
     opacity: 0.6;
 }
@@ -233,7 +232,6 @@ a {
 .profile-btn img {
     width: 32px;
     height: 32px;
-    -o-object-fit: cover;
     object-fit: cover;
     border-radius: 50%;
     margin-right: 4px;
@@ -249,6 +247,7 @@ a {
 .page-content {
     flex: 1;
     width: 100%;
+    overflow: hidden; /* Prevent scrolling in the entire page */
 }
 
 .app-sidebar {
@@ -287,7 +286,7 @@ a {
     background-color: var(--projects-section);
     border-radius: 32px;
     padding: 32px 32px 0 32px;
-    overflow: hidden;
+    overflow-y: auto; /* Make only the projects section scrollable */
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -395,7 +394,7 @@ a {
     width: 100%;
     border-radius: 30px;
     position: relative;
-    overflow: auto;
+    overflow: hidden; /* Prevent scrolling in messages section */
     transition: all 300ms cubic-bezier(0.19, 1, 0.56, 1);
 }
 
@@ -443,7 +442,6 @@ a {
 
 .message-box img {
     border-radius: 50%;
-    -o-object-fit: cover;
     object-fit: cover;
     width: 40px;
     height: 40px;
@@ -513,7 +511,7 @@ a {
 
 .project-boxes {
     margin: 0 -8px;
-    overflow-y: auto;
+    overflow-y: auto; /* Ensure project boxes are scrollable */
 }
 
 .project-boxes.jsGridView {
@@ -531,7 +529,6 @@ a {
     border-radius: 10px;
     position: relative;
     width: 100%;
-    
 }
 
 .project-boxes.jsListView .project-box>* {
@@ -635,20 +632,6 @@ a {
     background-color: transparent;
     border: none;
     flex-shrink: 0;
-    /*&:after, &:before {
-content: '';
-position: absolute;
-width: 6px;
-height: 6px;
-border-radius: 50%;
-background-color: var(--main-color);
-opacity: .8;
-left: 50%;
-transform: translatex(-50%);
-}
-
-&:before { top: 0;}
-&:after { bottom: 0; }*/
 }
 
 .more-wrapper {
@@ -725,7 +708,6 @@ transform: translatex(-50%);
     height: 20px;
     border-radius: 50%;
     overflow: hidden;
-    -o-object-fit: cover;
     object-fit: cover;
 }
 
@@ -950,4 +932,141 @@ transform: translatex(-50%);
         right: 2px;
         top: 10px;
     }
+}
+
+#calendar {
+    max-width: 900px;
+    width: 75%;
+    height: 100vh;
+    margin: 1px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fc-event {
+    border: none;
+    cursor: pointer;
+}
+
+.fc-event:hover {
+    opacity: 0.8;
+}
+
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000; /* Ensure it's on top of everything */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--projects-section); /* Match the projects section background */
+    border-radius: 16px; /* Rounded corners */
+    padding: 24px; /* Spacing inside the modal */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    max-width: 500px; /* Limit width for better readability */
+    width: 90%; /* Responsive width */
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 24px;
+    color: var(--main-color); /* Match the main text color */
+    cursor: pointer;
+}
+
+.close-modal:hover {
+    color: var(--link-color-hover); /* Hover effect */
+}
+
+/* Task Manager Styles (already provided earlier) */
+.task-manager {
+    background-color: var(--projects-section);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 16px 0;
+    max-width: 500px;
+    width: 100%;
+}
+
+.task-manager h2 {
+    color: var(--main-color);
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.task {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.task input[type="text"],
+.task select,
+.task input[type="date"] {
+    padding: 10px;
+    border: 1px solid var(--message-box-border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--main-color);
+    background-color: var(--search-area-bg);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.task input[type="text"]:focus,
+.task select:focus,
+.task input[type="date"]:focus {
+    border-color: var(--link-color-hover);
+}
+
+.task select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231F1C2E%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px;
+}
+
+.task label {
+    color: var(--secondary-color);
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.subtask-input {
+    margin-bottom: 8px;
+}
+
+#addTask {
+    background-color: var(--button-bg);
+    color: var(--link-color-active);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 16px;
+}
+
+#addTask:hover {
+    background-color: var(--link-color-hover);
+    color: var(--main-color);
 }

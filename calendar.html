@@ -4,6 +4,10 @@
 <head>
     <title>Our Final Webpage</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- FullCalendar CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
     <link rel="stylesheet" href="app.css">
 
     <head>
@@ -66,7 +70,7 @@
     <div class="app-container">
         <div class="app-content">
             <div class="app-sidebar">
-                <a href="" class="app-sidebar-link active">
+                <a href="main.html" class="app-sidebar-link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                         class="feather feather-home">
@@ -74,7 +78,7 @@
                         <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
                 </a>
-                <a href="calendar.html" class="app-sidebar-link">
+                <a href="calendar.html" class="app-sidebar-link active">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                         class="feather feather-calendar">
@@ -90,77 +94,7 @@
                     <p>Projects</p>
                     <p class="time"> </p>
                 </div>
-                <div class="projects-section-line">
-                    <div class="projects-status">
-                        <div class="item-status">
-                            <span class="status-number deadline-past">0</span>
-                            <span class="status-type">Deadline Past</span>
-                        </div>
-                        <div class="item-status">
-                            <span class="status-number working-on-it">0</span>
-                            <span class="status-type">Working on it</span>
-                        </div>
-                        <div class="item-status">
-                            <span class="status-number total-tasks">0</span>
-                            <span class="status-type">Total Task List</span>
-                        </div>
-                    </div>
-                    <div class="view-actions">
-                        <button class="view-btn list-view" title="List View">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="feather feather-list">
-                                <line x1="8" y1="6" x2="21" y2="6" />
-                                <line x1="8" y1="12" x2="21" y2="12" />
-                                <line x1="8" y1="18" x2="21" y2="18" />
-                                <line x1="3" y1="6" x2="3.01" y2="6" />
-                                <line x1="3" y1="12" x2="3.01" y2="12" />
-                                <line x1="3" y1="18" x2="3.01" y2="18" />
-                            </svg>
-                        </button>
-                        <button class="view-btn grid-view active" title="Grid View">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" class="feather feather-grid">
-                                <rect x="3" y="3" width="7" height="7" />
-                                <rect x="14" y="3" width="7" height="7" />
-                                <rect x="14" y="14" width="7" height="7" />
-                                <rect x="3" y="14" width="7" height="7" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <!-- Modal for Task Manager -->
-                <div id="taskManagerModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close-modal">&times;</span>
-                        <div class="task-manager">
-                            <h2>Task Manager</h2>
-                            <div class="task">
-                                <input type="text" id="taskName" placeholder="Enter Task">
-                                <select id="priority">
-                                    <option value="High">High Priority</option>
-                                    <option value="Medium">Medium Priority</option>
-                                    <option value="Low">Low Priority</option>
-                                </select>
-                                <input type="date" id="deadline" placeholder="Deadline">
-
-                                <label>Subtasks (max 4):</label>
-                                <input type="text" class="subtask-input" placeholder="Subtask 1">
-                                <input type="text" class="subtask-input" placeholder="Subtask 2">
-                                <input type="text" class="subtask-input" placeholder="Subtask 3">
-                                <input type="text" class="subtask-input" placeholder="Subtask 4">
-
-                                <button id="addTask">Add Task</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Project Boxes Section -->
-                <div class="project-boxes jsGridView" id="projectBoxes">
-                    <!-- Existing project boxes will be here -->
-
-                </div>
+                <div id="calendar"></div>
             </div>
             <div class="messages-section">
                 <button class="messages-close">
@@ -221,7 +155,7 @@
                                 .....
                             </p>
                             <p class="message-line time">
-                                Dec, 12
+                                <p class="time"> </p>
                             </p>
                         </div>
                     </div>
@@ -282,6 +216,7 @@
 </body>
 </div>
 </body>
+<script src="calendar.js"></script>
 <script src="app.js"></script>
 <script src="night.js"></script>
 
