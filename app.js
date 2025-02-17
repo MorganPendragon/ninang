@@ -461,17 +461,20 @@ document.addEventListener('DOMContentLoaded', function () {
     //alarm
 
     function checkDeadlines(tasks) {
-        const now = new Date();
-        const currentDate = now.toISOString().split('T')[0]; // Get the current date in YYYY-MM-DD format
-
+        let now = new Date();
+    
         tasks.forEach(task => {
-            const dueDate = task.due_date.split('T')[0]; // Get the due date in YYYY-MM-DD format
-
-            if (dueDate === currentDate && task.progress < 100) {
-                alert(`Deadline for task "${task.task_name}" is today!`);
+            let dueDate = new Date(task.due_date);
+            dueDate.setHours(0, 0, 0, 0);
+            now.setHours(0, 0, 0, 0);
+    
+            if (dueDate.getTime() === now.getTime()) {
+                console.log(`Task "${task.task_name}" is due today!`);
+                alert(`Task "${task.task_name}" is due today!`);
             }
         });
     }
+    
 
     const audio = new Audio('/sounds/alert.mp3');
     audio.play();
@@ -492,4 +495,8 @@ document.addEventListener('DOMContentLoaded', function () {
     fetchTasks();
 
     setInterval(fetchTasks, 3600000);
+    setTimeout(() => {
+        alert(`A task is past due!`);
+    }, 3);
+    
 });
