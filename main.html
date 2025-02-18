@@ -25,6 +25,31 @@
                 </div>
             </div>
             <div class="app-header-right">
+                <button id="checkTasks">
+                    <?xml version="1.0" encoding="UTF-8"?><svg id="Layer_2" xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 49.05 44.18">
+                        <defs>
+                            <style>
+                                .cls-1 {
+                                    fill: #231f20;
+                                }
+                            </style>
+                        </defs>
+                        <g id="Layer_1-2">
+                            <g>
+                                <path class="cls-1"
+                                    d="m49.05,36.83V1.85c0-1.02-.83-1.85-1.85-1.85H1.85C.83,0,0,.83,0,1.85v40.48c0,1.02.83,1.85,1.85,1.85h45.35c1.02,0,1.85-.83,1.85-1.85v-1.85h-3.65v.05H3.65v-16.61s.04,0,.06,0h41.69v12.91h3.65ZM3.71,20.27s-.04,0-.06,0V3.65h41.74v16.61H3.71Z" />
+                                <path class="cls-1"
+                                    d="m14.75,9.61c-1.42,0-2.57,1.15-2.57,2.56s1.15,2.57,2.57,2.57,2.57-1.15,2.57-2.57-1.15-2.56-2.57-2.56Z" />
+                                <path class="cls-1"
+                                    d="m24.52,9.61c-1.41,0-2.56,1.15-2.56,2.56s1.15,2.57,2.56,2.57,2.57-1.15,2.57-2.57-1.15-2.56-2.57-2.56Z" />
+                                <path class="cls-1"
+                                    d="m34.29,9.61c-1.42,0-2.57,1.15-2.57,2.56s1.15,2.57,2.57,2.57,2.56-1.15,2.56-2.57-1.15-2.56-2.56-2.56Z" />
+                            </g>
+                        </g>
+                    </svg>
+                </button>
+
                 <button class="mode-switch" title="Switch Theme">
                     <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
@@ -87,6 +112,8 @@
                     </svg>
                 </a>
             </div>
+
+
             <div class="projects-section">
                 <div class="projects-section-header">
                     <p>Projects</p>
@@ -218,98 +245,168 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-    const supabaseUrl = 'https://hddkqyxhojtgvlautvzx.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZGtxeXhob2p0Z3ZsYXV0dnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1NTI4ODUsImV4cCI6MjA1NDEyODg4NX0.4FAo2vDcCCjgDACSnJXiDaA_gktK5XgoYTuOPcIG2Cg'; // Replace with your API key';
-    const database = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseUrl = 'https://hddkqyxhojtgvlautvzx.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZGtxeXhob2p0Z3ZsYXV0dnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1NTI4ODUsImV4cCI6MjA1NDEyODg4NX0.4FAo2vDcCCjgDACSnJXiDaA_gktK5XgoYTuOPcIG2Cg'; // Replace with your API key';
+        const database = supabase.createClient(supabaseUrl, supabaseKey);
 
-    console.log('Supabase client initialized:', database);
+        console.log('Supabase client initialized:', database);
 
-    let isEditMode = false; // Track if we're in edit mode
-    let currentTaskId = null; // Track the task being edited
+        let isEditMode = false; // Track if we're in edit mode
+        let currentTaskId = null; // Track the task being edited
 
-    const modal = document.getElementById('taskManagerModal');
-    const addBtn = document.querySelector('.add-btn');
-    const closeModalBtn = document.querySelector('.close-modal');
-    const addTaskBtn = document.getElementById('addTask');
+        const modal = document.getElementById('taskManagerModal');
+        const addBtn = document.querySelector('.add-btn');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const addTaskBtn = document.getElementById('addTask');
 
-    // Open modal when "Add New Project" button is clicked
-    addBtn.addEventListener('click', () => {
-        modal.style.display = 'flex'; // Show the modal
-        clearForm(); // Clear the form when opening the modal
-    });
-
-    // Close modal when the close button is clicked
-    closeModalBtn.addEventListener('click', () => {
-        modal.style.display = 'none'; // Hide the modal
-    });
-
-    // Close modal when clicking outside the modal
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none'; // Hide the modal
-        }
-    });
-
-    // Ensure the event listener is only added once
-    addTaskBtn.removeEventListener('click', handleAddTask); // Remove existing listener
-    addTaskBtn.addEventListener('click', handleAddTask); // Add new listener
-
-    function handleAddTask() {
-        addTask().then(() => {
-            modal.style.display = 'none'; // Hide the modal after adding/editing
+        // Open modal when "Add New Project" button is clicked
+        addBtn.addEventListener('click', () => {
+            modal.style.display = 'flex'; // Show the modal
+            clearForm(); // Clear the form when opening the modal
         });
-    }
 
-    function getRandomColor() {
-        const colors = ["#fee4cb", "#e9e7fd", "#ffd3e2", "#c8f7dc", "#d5deff"];
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
+        // Close modal when the close button is clicked
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none'; // Hide the modal
+        });
 
-    async function addTask() {
-        let taskName = document.getElementById("taskName").value;
-        let priority = document.getElementById("priority").value;
-        let dueDate = document.getElementById("deadline").value;
+        // Close modal when clicking outside the modal
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none'; // Hide the modal
+            }
+        });
 
-        // Collect subtasks from individual inputs
-        const subtaskInputs = document.querySelectorAll('.subtask-input');
-        let subTasks = Array.from(subtaskInputs)
-            .map(input => input.value.trim())
-            .filter(subTask => subTask !== "");
+        // Ensure the event listener is only added once
+        addTaskBtn.removeEventListener('click', handleAddTask); // Remove existing listener
+        addTaskBtn.addEventListener('click', handleAddTask); // Add new listener
 
-        if (!taskName || !dueDate) {
-            alert("Please fill in all fields.");
-            return;
+        function handleAddTask() {
+            addTask().then(() => {
+                modal.style.display = 'none'; // Hide the modal after adding/editing
+            });
         }
 
-        // Validate subtask limit (max 4 subtasks)
-        if (subTasks.length > 4) {
-            alert("You can only add up to 4 subtasks.");
-            return;
+        function getRandomColor() {
+            const colors = ["#fee4cb", "#e9e7fd", "#ffd3e2", "#c8f7dc", "#d5deff"];
+            return colors[Math.floor(Math.random() * colors.length)];
         }
 
-        if (isEditMode) {
-            // Update existing task
-            await editTask(currentTaskId, taskName, priority, dueDate, subTasks);
-            isEditMode = false; // Exit edit mode
-            currentTaskId = null; // Reset current task ID
-            document.getElementById("addTask").textContent = "Add Task"; // Change button text back
-        } else {
-            // Add new task
-            const { data, error } = await database
-                .from('tasks')
-                .insert([{ task_name: taskName, priority, progress: 0, due_date: dueDate }])
-                .select();
+        async function addTask() {
+            let taskName = document.getElementById("taskName").value;
+            let priority = document.getElementById("priority").value;
+            let dueDate = document.getElementById("deadline").value;
 
-            if (error) {
-                console.error('Error inserting task:', error);
-                alert('Failed to add task. Please try again.');
+            // Collect subtasks from individual inputs
+            const subtaskInputs = document.querySelectorAll('.subtask-input');
+            let subTasks = Array.from(subtaskInputs)
+                .map(input => input.value.trim())
+                .filter(subTask => subTask !== "");
+
+            if (!taskName || !dueDate) {
+                alert("Please fill in all fields.");
                 return;
             }
 
-            const taskId = data[0].id;
+            // Validate subtask limit (max 4 subtasks)
+            if (subTasks.length > 4) {
+                alert("You can only add up to 4 subtasks.");
+                return;
+            }
 
+            if (isEditMode) {
+                // Update existing task
+                await editTask(currentTaskId, taskName, priority, dueDate, subTasks);
+                isEditMode = false; // Exit edit mode
+                currentTaskId = null; // Reset current task ID
+                document.getElementById("addTask").textContent = "Add Task"; // Change button text back
+            } else {
+                // Add new task
+                const { data, error } = await database
+                    .from('tasks')
+                    .insert([{ task_name: taskName, priority, progress: 0, due_date: dueDate }])
+                    .select();
+
+                if (error) {
+                    console.error('Error inserting task:', error);
+                    alert('Failed to add task. Please try again.');
+                    return;
+                }
+
+                const taskId = data[0].id;
+
+                if (subTasks.length > 0) {
+                    // Insert subtasks in order
+                    const subtaskInserts = subTasks.map((subTask, index) => ({
+                        task_id: taskId,
+                        subtask_name: subTask,
+                        completed: false,
+                        order: index + 1, // Add an order field to track the order
+                    }));
+                    await database.from('subtasks').insert(subtaskInserts);
+                }
+            }
+
+            fetchTasks();
+            clearForm(); // Clear the form after adding/editing
+        }
+
+        async function deleteTask(taskId) {
+            await database.from('tasks').delete().eq('id', taskId);
+            await database.from('subtasks').delete().eq('task_id', taskId);
+            fetchTasks();
+        }
+
+        async function deleteSubtask(taskId, subtaskName) {
+            await database.from('subtasks').delete().eq('task_id', taskId).eq('subtask_name', subtaskName);
+            fetchTasks();
+        }
+
+        async function toggleSubtaskCompletion(taskId, subtaskName, isCompleted) {
+            await database
+                .from('subtasks')
+                .update({ completed: isCompleted })
+                .eq('task_id', taskId)
+                .eq('subtask_name', subtaskName);
+
+            updateProgressBar(taskId);
+        }
+
+        async function editTask(taskId, taskName, priority, dueDate, subTasks) {
+            // Validate subtask limit (max 4 subtasks)
+            if (subTasks.length > 4) {
+                alert("You can only add up to 4 subtasks.");
+                return;
+            }
+
+            // Update task details
+            const { error: taskError } = await database
+                .from('tasks')
+                .update({ task_name: taskName, priority, due_date: dueDate })
+                .eq('id', taskId);
+
+            if (taskError) {
+                console.error('Error updating task:', taskError);
+                alert('Failed to update task. Please try again.');
+                return;
+            }
+
+            // Fetch existing subtasks
+            const { data: existingSubtasks, error: subtaskError } = await database
+                .from('subtasks')
+                .select('*')
+                .eq('task_id', taskId);
+
+            if (subtaskError) {
+                console.error('Error fetching subtasks:', subtaskError);
+                return;
+            }
+
+            // Delete existing subtasks
+            await database.from('subtasks').delete().eq('task_id', taskId);
+
+            // Insert updated subtasks in order
             if (subTasks.length > 0) {
-                // Insert subtasks in order
                 const subtaskInserts = subTasks.map((subTask, index) => ({
                     task_id: taskId,
                     subtask_name: subTask,
@@ -320,147 +417,77 @@
             }
         }
 
-        fetchTasks();
-        clearForm(); // Clear the form after adding/editing
-    }
+        function updateProgressBar(taskId) {
+            const subtaskCheckboxes = document.querySelectorAll(`.subtask-checkbox[data-task-id='${taskId}']`);
+            const progressBar = document.querySelector(`.box-progress[data-task-id='${taskId}']`);
+            const progressPercentage = document.querySelector(`.box-progress-percentage[data-task-id='${taskId}']`);
+            const daysLeftText = document.querySelector(`.days-left[data-task-id='${taskId}']`);
 
-    async function deleteTask(taskId) {
-        await database.from('tasks').delete().eq('id', taskId);
-        await database.from('subtasks').delete().eq('task_id', taskId);
-        fetchTasks();
-    }
+            if (!progressBar || !progressPercentage || !daysLeftText) return;
 
-    async function deleteSubtask(taskId, subtaskName) {
-        await database.from('subtasks').delete().eq('task_id', taskId).eq('subtask_name', subtaskName);
-        fetchTasks();
-    }
+            const totalSubtasks = subtaskCheckboxes.length;
+            const completedSubtasks = Array.from(subtaskCheckboxes).filter(checkbox => checkbox.checked).length;
+            const progress = totalSubtasks === 0 ? 0 : Math.round((completedSubtasks / totalSubtasks) * 100);
 
-    async function toggleSubtaskCompletion(taskId, subtaskName, isCompleted) {
-        await database
-            .from('subtasks')
-            .update({ completed: isCompleted })
-            .eq('task_id', taskId)
-            .eq('subtask_name', subtaskName);
+            progressBar.style.width = `${progress}%`;
+            progressPercentage.textContent = `${progress}%`;
 
-        updateProgressBar(taskId);
-    }
+            if (progress === 100) {
+                daysLeftText.textContent = "Completed";
+                progressBar.style.backgroundColor = '#4CAF50';
+            } else {
+                const dueDate = daysLeftText.getAttribute('data-due-date');
+                const daysLeft = calculateDaysLeft(dueDate);
+                daysLeftText.textContent = daysLeft;
+                progressBar.style.backgroundColor = '#ff942e';
+            }
 
-    async function editTask(taskId, taskName, priority, dueDate, subTasks) {
-        // Validate subtask limit (max 4 subtasks)
-        if (subTasks.length > 4) {
-            alert("You can only add up to 4 subtasks.");
-            return;
+            // Update progress in the database
+            database
+                .from('tasks')
+                .update({ progress: progress })
+                .eq('id', taskId)
+                .then(({ error }) => {
+                    if (error) {
+                        console.error('Error updating progress:', error);
+                    } else {
+                        // Refresh the calendar to reflect changes
+                        fetchTasksAndRenderCalendar(database, calendar);
+                    }
+                });
         }
 
-        // Update task details
-        const { error: taskError } = await database
-            .from('tasks')
-            .update({ task_name: taskName, priority, due_date: dueDate })
-            .eq('id', taskId);
+        function updateCalendarEvent(taskId, progress) {
+            if (!calendar) return; // Ensure the calendar is initialized
 
-        if (taskError) {
-            console.error('Error updating task:', taskError);
-            alert('Failed to update task. Please try again.');
-            return;
+            // Find the event in the calendar
+            const event = calendar.getEventById(taskId);
+
+            if (event) {
+                // Update the event's progress and color
+                event.setExtendedProp('progress', progress);
+                event.setProp('color', progress === 100 ? '#4CAF50' : '#ff942e'); // Green for completed, orange for incomplete
+            }
         }
 
-        // Fetch existing subtasks
-        const { data: existingSubtasks, error: subtaskError } = await database
-            .from('subtasks')
-            .select('*')
-            .eq('task_id', taskId);
+        function createProjectBox(taskId, taskName, priority, progressPercentage, dueDate, subTasks) {
+            let projectBoxWrapper = document.createElement("div");
+            projectBoxWrapper.classList.add("project-box-wrapper");
 
-        if (subtaskError) {
-            console.error('Error fetching subtasks:', subtaskError);
-            return;
-        }
+            let projectBox = document.createElement("div");
+            projectBox.classList.add("project-box");
 
-        // Delete existing subtasks
-        await database.from('subtasks').delete().eq('task_id', taskId);
+            // Change background color if the task is completed
+            if (progressPercentage === 100) {
+                projectBox.style.backgroundColor = '#e8f5e9'; // Light green for completed tasks
+            } else {
+                projectBox.style.backgroundColor = getRandomColor();
+            }
 
-        // Insert updated subtasks in order
-        if (subTasks.length > 0) {
-            const subtaskInserts = subTasks.map((subTask, index) => ({
-                task_id: taskId,
-                subtask_name: subTask,
-                completed: false,
-                order: index + 1, // Add an order field to track the order
-            }));
-            await database.from('subtasks').insert(subtaskInserts);
-        }
-    }
+            // Sort subtasks by their order
+            subTasks.sort((a, b) => a.order - b.order);
 
-    function updateProgressBar(taskId) {
-        const subtaskCheckboxes = document.querySelectorAll(`.subtask-checkbox[data-task-id='${taskId}']`);
-        const progressBar = document.querySelector(`.box-progress[data-task-id='${taskId}']`);
-        const progressPercentage = document.querySelector(`.box-progress-percentage[data-task-id='${taskId}']`);
-        const daysLeftText = document.querySelector(`.days-left[data-task-id='${taskId}']`);
-
-        if (!progressBar || !progressPercentage || !daysLeftText) return;
-
-        const totalSubtasks = subtaskCheckboxes.length;
-        const completedSubtasks = Array.from(subtaskCheckboxes).filter(checkbox => checkbox.checked).length;
-        const progress = totalSubtasks === 0 ? 0 : Math.round((completedSubtasks / totalSubtasks) * 100);
-
-        progressBar.style.width = `${progress}%`;
-        progressPercentage.textContent = `${progress}%`;
-
-        if (progress === 100) {
-            daysLeftText.textContent = "Completed";
-            progressBar.style.backgroundColor = '#4CAF50';
-        } else {
-            const dueDate = daysLeftText.getAttribute('data-due-date');
-            const daysLeft = calculateDaysLeft(dueDate);
-            daysLeftText.textContent = daysLeft;
-            progressBar.style.backgroundColor = '#ff942e';
-        }
-
-        // Update progress in the database
-        database
-            .from('tasks')
-            .update({ progress: progress })
-            .eq('id', taskId)
-            .then(({ error }) => {
-                if (error) {
-                    console.error('Error updating progress:', error);
-                } else {
-                    // Refresh the calendar to reflect changes
-                    fetchTasksAndRenderCalendar(database, calendar);
-                }
-            });
-    }
-
-    function updateCalendarEvent(taskId, progress) {
-        if (!calendar) return; // Ensure the calendar is initialized
-
-        // Find the event in the calendar
-        const event = calendar.getEventById(taskId);
-
-        if (event) {
-            // Update the event's progress and color
-            event.setExtendedProp('progress', progress);
-            event.setProp('color', progress === 100 ? '#4CAF50' : '#ff942e'); // Green for completed, orange for incomplete
-        }
-    }
-
-    function createProjectBox(taskId, taskName, priority, progressPercentage, dueDate, subTasks) {
-        let projectBoxWrapper = document.createElement("div");
-        projectBoxWrapper.classList.add("project-box-wrapper");
-
-        let projectBox = document.createElement("div");
-        projectBox.classList.add("project-box");
-
-        // Change background color if the task is completed
-        if (progressPercentage === 100) {
-            projectBox.style.backgroundColor = '#e8f5e9'; // Light green for completed tasks
-        } else {
-            projectBox.style.backgroundColor = getRandomColor();
-        }
-
-        // Sort subtasks by their order
-        subTasks.sort((a, b) => a.order - b.order);
-
-        let subTaskHtml = subTasks.length > 0 ? `<p>Subtasks:</p><ul>${subTasks.map(subTask => `
+            let subTaskHtml = subTasks.length > 0 ? `<p>Subtasks:</p><ul>${subTasks.map(subTask => `
             <li>
                 <input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}' ${subTask.completed ? 'checked' : ''}>
                 ${subTask.subtask_name}
@@ -469,9 +496,9 @@
             </li>
         `).join('')}</ul>` : "";
 
-        let daysLeftText = calculateDaysLeft(dueDate);
+            let daysLeftText = calculateDaysLeft(dueDate);
 
-        projectBox.innerHTML = `
+            projectBox.innerHTML = `
             <button class="edit-task" data-task-id="${taskId}">✏️</button>
             <button class='delete-task' data-task-id='${taskId}'>❌</button>
             <div class="project-box-content-header">
@@ -495,229 +522,268 @@
             </div>
         `;
 
-        // Add event listeners for delete, edit, and subtask completion
-        projectBox.querySelector('.delete-task').addEventListener('click', () => deleteTask(taskId));
-        projectBox.querySelectorAll('.delete-subtask').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const subtaskName = event.target.getAttribute('data-subtask');
-                deleteSubtask(taskId, subtaskName);
-            });
-        });
-
-        projectBox.querySelectorAll('.check-subtask').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const subtaskName = event.target.getAttribute('data-subtask');
-                const checkbox = event.target.parentElement.querySelector('.subtask-checkbox');
-                const isCompleted = checkbox.checked;
-                toggleSubtaskCompletion(taskId, subtaskName, isCompleted);
-            });
-        });
-
-        projectBox.querySelector('.edit-task').addEventListener('click', () => {
-            // Populate the form with task details
-            document.getElementById("taskName").value = taskName;
-            document.getElementById("priority").value = priority;
-            document.getElementById("deadline").value = dueDate;
-
-            // Populate subtask inputs
-            const subtaskInputs = document.querySelectorAll('.subtask-input');
-            subtaskInputs.forEach((input, index) => {
-                input.value = subTasks[index]?.subtask_name || "";
+            // Add event listeners for delete, edit, and subtask completion
+            projectBox.querySelector('.delete-task').addEventListener('click', () => deleteTask(taskId));
+            projectBox.querySelectorAll('.delete-subtask').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const subtaskName = event.target.getAttribute('data-subtask');
+                    deleteSubtask(taskId, subtaskName);
+                });
             });
 
-            // Enter edit mode
-            isEditMode = true;
-            currentTaskId = taskId;
-            document.getElementById("addTask").textContent = "Save Task"; // Change button text
-            modal.style.display = 'flex'; // Show the modal
-        });
+            projectBox.querySelectorAll('.check-subtask').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const subtaskName = event.target.getAttribute('data-subtask');
+                    const checkbox = event.target.parentElement.querySelector('.subtask-checkbox');
+                    const isCompleted = checkbox.checked;
+                    toggleSubtaskCompletion(taskId, subtaskName, isCompleted);
+                });
+            });
 
-        document.getElementById("projectBoxes").appendChild(projectBox);
-    }
+            projectBox.querySelector('.edit-task').addEventListener('click', () => {
+                // Populate the form with task details
+                document.getElementById("taskName").value = taskName;
+                document.getElementById("priority").value = priority;
+                document.getElementById("deadline").value = dueDate;
 
-    function calculateDaysLeft(dueDate) {
-        let deadlineDate = new Date(dueDate);
-        let today = new Date();
+                // Populate subtask inputs
+                const subtaskInputs = document.querySelectorAll('.subtask-input');
+                subtaskInputs.forEach((input, index) => {
+                    input.value = subTasks[index]?.subtask_name || "";
+                });
 
-        // Normalize both dates to midnight to avoid time-related discrepancies
-        deadlineDate.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
+                // Enter edit mode
+                isEditMode = true;
+                currentTaskId = taskId;
+                document.getElementById("addTask").textContent = "Save Task"; // Change button text
+                modal.style.display = 'flex'; // Show the modal
+            });
 
-        // Calculate the difference in days
-        let difference = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
-
-        if (difference < 0) {
-            return "Deadline Passed";
-        } else if (difference === 0) {
-            return "Due Today";
-        } else {
-            return `${difference} Days Left`;
-        }
-    }
-
-    function clearForm() {
-        document.getElementById("taskName").value = "";
-        document.getElementById("priority").value = "High";
-        document.getElementById("deadline").value = "";
-        const subtaskInputs = document.querySelectorAll('.subtask-input');
-        subtaskInputs.forEach(input => input.value = "");
-    }
-
-    async function fetchTasks() {
-        const { data: tasks, error: taskError } = await database
-            .from('tasks')
-            .select('*');
-
-        if (taskError) {
-            console.error('Error fetching tasks:', taskError);
-            return;
+            document.getElementById("projectBoxes").appendChild(projectBox);
         }
 
-        document.getElementById("projectBoxes").innerHTML = '';
+        function calculateDaysLeft(dueDate) {
+            let deadlineDate = new Date(dueDate);
+            let today = new Date();
 
-        let now = new Date();
-        let deadlinePast = 0;
-        let workingOnIt = 0;
-        let completedTasks = 0;
-        let totalTasks = tasks.length;
+            // Normalize both dates to midnight to avoid time-related discrepancies
+            deadlineDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
 
-        for (let task of tasks) {
-            const { data: subtasks, error: subtaskError } = await database
-                .from('subtasks')
-                .select('*')
-                .eq('task_id', task.id)
-                .order('order', { ascending: true });
+            // Calculate the difference in days
+            let difference = Math.ceil((deadlineDate - today) / (1000 * 60 * 60 * 24));
 
-            if (subtaskError) {
-                console.error('Error fetching subtasks:', subtaskError);
-                continue;
-            }
-
-            // Create the project box
-            createProjectBox(task.id, task.task_name, task.priority, task.progress, task.due_date, subtasks);
-
-            let taskDeadline = new Date(task.due_date);
-
-            if (task.progress === 100) {
-                completedTasks++; // Task is completed
-            } else if (taskDeadline < now) {
-                deadlinePast++; // Task is overdue
+            if (difference < 0) {
+                return "Deadline Passed";
+            } else if (difference === 0) {
+                return "Due Today";
             } else {
-                workingOnIt++; // Task is still active
+                return `${difference} Days Left`;
             }
         }
 
-        // Update the UI with the task counts
-        document.querySelector('.status-number.deadline-past').textContent = deadlinePast;
-        document.querySelector('.status-number.working-on-it').textContent = workingOnIt;
-        document.querySelector('.status-number.total-tasks').textContent = totalTasks;
-        document.querySelector('.status-number.completed-tasks').textContent = completedTasks;
+        function clearForm() {
+            document.getElementById("taskName").value = "";
+            document.getElementById("priority").value = "High";
+            document.getElementById("deadline").value = "";
+            const subtaskInputs = document.querySelectorAll('.subtask-input');
+            subtaskInputs.forEach(input => input.value = "");
+        }
 
-        // Update the calendar with completed tasks
-        updateCalendar(tasks);
+        async function fetchTasks() {
+            const { data: tasks, error: taskError } = await database
+                .from('tasks')
+                .select('*');
 
-        // Check for deadlines
-        checkDeadlines(tasks);
-    }
+            if (taskError) {
+                console.error('Error fetching tasks:', taskError);
+                return;
+            }
 
-    function updateCalendar(tasks) {
-        if (!calendar) return; // Ensure the calendar is initialized
+            document.getElementById("projectBoxes").innerHTML = '';
 
-        // Clear existing events
-        calendar.removeAllEvents();
+            let now = new Date();
+            let deadlinePast = 0;
+            let workingOnIt = 0;
+            let completedTasks = 0;
+            let totalTasks = tasks.length;
 
-        // Add new events
-        tasks.forEach(task => {
-            calendar.addEvent({
-                title: task.task_name,
-                start: task.due_date,
-                end: task.due_date,
-                color: task.progress === 100 ? '#4CAF50' : '#ff942e', // Green for completed, orange for incomplete
-                extendedProps: {
-                    progress: task.progress, // Store progress for dynamic styling
-                },
+            for (let task of tasks) {
+                const { data: subtasks, error: subtaskError } = await database
+                    .from('subtasks')
+                    .select('*')
+                    .eq('task_id', task.id)
+                    .order('order', { ascending: true });
+
+                if (subtaskError) {
+                    console.error('Error fetching subtasks:', subtaskError);
+                    continue;
+                }
+
+                // Create the project box
+                createProjectBox(task.id, task.task_name, task.priority, task.progress, task.due_date, subtasks);
+
+                let taskDeadline = new Date(task.due_date);
+
+                if (task.progress === 100) {
+                    completedTasks++; // Task is completed
+                } else if (taskDeadline < now) {
+                    deadlinePast++; // Task is overdue
+                } else {
+                    workingOnIt++; // Task is still active
+                }
+            }
+
+            // Update the UI with the task counts
+            document.querySelector('.status-number.deadline-past').textContent = deadlinePast;
+            document.querySelector('.status-number.working-on-it').textContent = workingOnIt;
+            document.querySelector('.status-number.total-tasks').textContent = totalTasks;
+            document.querySelector('.status-number.completed-tasks').textContent = completedTasks;
+
+            // Update the calendar with completed tasks
+            updateCalendar(tasks);
+
+            // Check for deadlines
+            checkDeadlines(tasks);
+        }
+
+        function updateCalendar(tasks) {
+            if (!calendar) return; // Ensure the calendar is initialized
+
+            // Clear existing events
+            calendar.removeAllEvents();
+
+            // Add new events
+            tasks.forEach(task => {
+                calendar.addEvent({
+                    title: task.task_name,
+                    start: task.due_date,
+                    end: task.due_date,
+                    color: task.progress === 100 ? '#4CAF50' : '#ff942e', // Green for completed, orange for incomplete
+                    extendedProps: {
+                        progress: task.progress, // Store progress for dynamic styling
+                    },
+                });
             });
-        });
 
-        // Re-render the calendar
-        calendar.render();
-    }
+            // Re-render the calendar
+            calendar.render();
+        }
 
-    function updateCalendar(tasks) {
-        const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) return; // Ensure the calendar element exists
+        function updateCalendar(tasks) {
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return; // Ensure the calendar element exists
 
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            events: tasks.map(task => ({
-                title: task.task_name,
-                start: task.due_date,
-                end: task.due_date,
-                color: task.progress === 100 ? '#4CAF50' : '#ff942e', // Green for completed, orange for incomplete
-            })),
-        });
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: tasks.map(task => ({
+                    title: task.task_name,
+                    start: task.due_date,
+                    end: task.due_date,
+                    color: task.progress === 100 ? '#4CAF50' : '#ff942e', // Green for completed, orange for incomplete
+                })),
+            });
 
-        calendar.render();
-    }
+            calendar.render();
+        }
 
-    function updateCalendar(tasks) {
-        const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) return; // Ensure the calendar element exists
+        function updateCalendar(tasks) {
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return; // Ensure the calendar element exists
 
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            events: tasks.map(task => ({
-                title: task.task_name,
-                start: task.due_date,
-                end: task.due_date,
-                color: task.progress === 100 ? '#4CAF50' : '#ff942e', // Green for completed, orange for incomplete
-            })),
-        });
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                events: tasks.map(task => ({
+                    title: task.task_name,
+                    start: task.due_date,
+                    end: task.due_date,
+                    color: task.progress === 100 ? '#4CAF50' : '#ff942e', // Green for completed, orange for incomplete
+                })),
+            });
 
-        calendar.render();
-    }
+            calendar.render();
+        }
 
-    //alarm
+        //alarm
+
+        function checkDeadlines(tasks) {
+            let now = new Date();
+            now.setHours(0, 0, 0, 0); // Set once before loop
+
+            tasks.forEach(task => {
+                let dueDate = new Date(task.due_date);
+                dueDate.setHours(0, 0, 0, 0);
+
+                if (dueDate.getTime() === now.getTime()) {
+                    console.log(`Task "${task.task_name}" is due today!`);
+                    alert(`Task "${task.task_name}" is due today!`);
+
+                    // Play audio only when a task is due
+                    const audio = new Audio('./sounds/alert.mp3');
+                    audio.play().catch(error => console.error('Audio play error:', error));
+                }
+            });
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            const options = { month: 'long', day: 'numeric', year: 'numeric' };
+            document.querySelector('.time').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Update immediately
+        updateDateTime();
+
+        // Refresh every second (optional)
+        setInterval(updateDateTime, 1000);
+
+        // Fetch tasks on page load
+        fetchTasks();
+
+        setInterval(fetchTasks, 3600000);
+        setTimeout(() => {
+        }, 3);
+
+    });
+
+
+    let audio; // Declare audio globally so we can stop it later
 
     function checkDeadlines(tasks) {
         let now = new Date();
-    
+        now.setHours(0, 0, 0, 0); // Set once before loop
+
         tasks.forEach(task => {
             let dueDate = new Date(task.due_date);
             dueDate.setHours(0, 0, 0, 0);
-            now.setHours(0, 0, 0, 0);
-    
+
             if (dueDate.getTime() === now.getTime()) {
                 console.log(`Task "${task.task_name}" is due today!`);
                 alert(`Task "${task.task_name}" is due today!`);
+
+                // Play audio only when a task is due
+                audio = new Audio('./sounds/alert.mp3');
+                audio.loop = false; // Loop the sound until stopped
+                audio.play().catch(error => console.error('Audio play error:', error));
             }
         });
     }
-    
 
-    const audio = new Audio('./sounds/alert.mp3');
-    audio.play();
-
-    function updateDateTime() {
-        const now = new Date();
-        const options = { month: 'long', day: 'numeric', year: 'numeric' };
-        document.querySelector('.time').textContent = now.toLocaleDateString('en-US', options);
+    function stopAudio() {
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0; // Reset audio to start
+        }
     }
 
-    // Update immediately
-    updateDateTime();
 
-    // Refresh every second (optional)
-    setInterval(updateDateTime, 1000);
+    // Check deadlines when the user clicks the button
+    document.getElementById('checkTasks').addEventListener('click', () => {
+        checkDeadlines(tasks);
+    });
 
-    // Fetch tasks on page load
-    fetchTasks();
-
-    setInterval(fetchTasks, 3600000);
-    setTimeout(() => {
-        alert(`A task is past due!`);
-    }, 3);
-    
-});
+    // Stop sound when clicking "Stop Sound" button
+    document.getElementById('stopSound').addEventListener('click', stopAudio);
 </script>
+
 </html>
