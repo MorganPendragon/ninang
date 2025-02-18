@@ -1290,3 +1290,26 @@ button, a {
     background-color: var(--link-color-hover);
     color: var(--main-color);
 }
+
+.checktask {
+    background-color: #1a1a1a; /* Dark theme like other buttons */
+    border: none;
+    border-radius: 50%; /* Makes it circular */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.checktask svg {
+    fill: #ffffff; /* Icon color matching the others */
+    width: 20px;
+    height: 20px;
+}
+
+.checktask:hover {
+    background-color: #333; /* Slight hover effect */
+}
