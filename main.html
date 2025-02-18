@@ -26,30 +26,16 @@
             </div>
             <div class="app-header-right">
                 <button id="checkTasks">
-                    <?xml version="1.0" encoding="UTF-8"?><svg id="Layer_2" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 49.05 44.18">
-                        <defs>
-                            <style>
-                                .cls-1 {
-                                    fill: #231f20;
-                                }
-                            </style>
-                        </defs>
-                        <g id="Layer_1-2">
-                            <g>
-                                <path class="cls-1"
-                                    d="m49.05,36.83V1.85c0-1.02-.83-1.85-1.85-1.85H1.85C.83,0,0,.83,0,1.85v40.48c0,1.02.83,1.85,1.85,1.85h45.35c1.02,0,1.85-.83,1.85-1.85v-1.85h-3.65v.05H3.65v-16.61s.04,0,.06,0h41.69v12.91h3.65ZM3.71,20.27s-.04,0-.06,0V3.65h41.74v16.61H3.71Z" />
-                                <path class="cls-1"
-                                    d="m14.75,9.61c-1.42,0-2.57,1.15-2.57,2.56s1.15,2.57,2.57,2.57,2.57-1.15,2.57-2.57-1.15-2.56-2.57-2.56Z" />
-                                <path class="cls-1"
-                                    d="m24.52,9.61c-1.41,0-2.56,1.15-2.56,2.56s1.15,2.57,2.56,2.57,2.57-1.15,2.57-2.57-1.15-2.56-2.57-2.56Z" />
-                                <path class="cls-1"
-                                    d="m34.29,9.61c-1.42,0-2.57,1.15-2.57,2.56s1.15,2.57,2.57,2.57,2.56-1.15,2.56-2.57-1.15-2.56-2.56-2.56Z" />
-                            </g>
-                        </g>
-                    </svg>
+                    check button
                 </button>
-
+                <!-- Modal for Passed Deadlines -->
+                <div id="passedDeadlinesModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-modal">&times;</span>
+                        <h2>Tasks with Passed Deadlines</h2>
+                        <div id="passedDeadlinesList"></div>
+                    </div>
+                </div>
                 <button class="mode-switch" title="Switch Theme">
                     <svg class="moon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="2" width="24" height="24" viewBox="0 0 24 24">
@@ -706,24 +692,6 @@
 
         //alarm
 
-        function checkDeadlines(tasks) {
-            let now = new Date();
-            now.setHours(0, 0, 0, 0); // Set once before loop
-
-            tasks.forEach(task => {
-                let dueDate = new Date(task.due_date);
-                dueDate.setHours(0, 0, 0, 0);
-
-                if (dueDate.getTime() === now.getTime()) {
-                    console.log(`Task "${task.task_name}" is due today!`);
-                    alert(`Task "${task.task_name}" is due today!`);
-
-                    // Play audio only when a task is due
-                    const audio = new Audio('./sounds/alert.mp3');
-                    audio.play().catch(error => console.error('Audio play error:', error));
-                }
-            });
-        }
 
         function updateDateTime() {
             const now = new Date();
@@ -744,46 +712,86 @@
         setTimeout(() => {
         }, 3);
 
-    });
+        let audio; // Declare audio globally so we can stop it later
 
+        const passedDeadlinesModal = document.getElementById('passedDeadlinesModal');
+        const closePassedDeadlinesModal = passedDeadlinesModal.querySelector('.close-modal');
+        const passedDeadlinesList = document.getElementById('passedDeadlinesList');
 
-    let audio; // Declare audio globally so we can stop it later
+        // Open modal when "Check Status" button is clicked
+        document.getElementById('checkTasks').addEventListener('click', async () => {
+            const tasks = await fetchTasksWithPassedDeadlines();
+            displayPassedDeadlines(tasks);
+            passedDeadlinesModal.style.display = 'flex';
+            playAlertSound();
+        });
 
-    function checkDeadlines(tasks) {
-        let now = new Date();
-        now.setHours(0, 0, 0, 0); // Set once before loop
+        // Close modal when the close button is clicked
+        closePassedDeadlinesModal.addEventListener('click', () => {
+            passedDeadlinesModal.style.display = 'none';
+            stopAlertSound();
+        });
 
-        tasks.forEach(task => {
-            let dueDate = new Date(task.due_date);
-            dueDate.setHours(0, 0, 0, 0);
-
-            if (dueDate.getTime() === now.getTime()) {
-                console.log(`Task "${task.task_name}" is due today!`);
-                alert(`Task "${task.task_name}" is due today!`);
-
-                // Play audio only when a task is due
-                audio = new Audio('./sounds/alert.mp3');
-                audio.loop = false; // Loop the sound until stopped
-                audio.play().catch(error => console.error('Audio play error:', error));
+        // Close modal when clicking outside the modal
+        window.addEventListener('click', (event) => {
+            if (event.target === passedDeadlinesModal) {
+                passedDeadlinesModal.style.display = 'none';
+                stopAlertSound();
             }
         });
-    }
 
-    function stopAudio() {
-        if (audio) {
-            audio.pause();
-            audio.currentTime = 0; // Reset audio to start
+        async function fetchTasksWithPassedDeadlines() {
+            const now = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+            const { data: tasks, error } = await database
+                .from('tasks')
+                .select('*')
+                .lt('due_date', now); // Fetch tasks with due dates before today
+
+            if (error) {
+                console.error('Error fetching tasks with passed deadlines:', error);
+                return [];
+            }
+
+            return tasks;
         }
-    }
 
+        function displayPassedDeadlines(tasks) {
+            passedDeadlinesList.innerHTML = ''; // Clear the list
+            if (tasks.length === 0) {
+                passedDeadlinesList.innerHTML = '<p>No tasks with passed deadlines.</p>';
+                return;
+            }
 
-    // Check deadlines when the user clicks the button
-    document.getElementById('checkTasks').addEventListener('click', () => {
-        checkDeadlines(tasks);
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.classList.add('task-item');
+                taskElement.innerHTML = `
+            <p><strong>${task.task_name}</strong></p>
+            <p>Due Date: ${task.due_date}</p>
+            <p>Priority: ${task.priority}</p>
+        `;
+                passedDeadlinesList.appendChild(taskElement);
+            });
+        }
+
+        function playAlertSound() {
+            audio = new Audio('./sounds/alert.mp3');
+            audio.loop = true; // Loop the sound until stopped
+            audio.play().catch(error => console.error('Audio play error:', error));
+        }
+
+        function stopAlertSound() {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0; // Reset audio to start
+            }
+        }
+
     });
 
-    // Stop sound when clicking "Stop Sound" button
-    document.getElementById('stopSound').addEventListener('click', stopAudio);
+
+
+
 </script>
 
 </html>
