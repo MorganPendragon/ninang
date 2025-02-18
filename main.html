@@ -14,7 +14,7 @@
                 <span class="app-icon"></span>
                 <p class="app-name">To Do List</p>
                 <div class="search-wrapper">
-                    <input class="search-input" type="text" placeholder="Search">
+                    <input class="search-input" id="searchBox" type="text" placeholder="Search">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor"
                         stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search"
                         viewBox="0 0 24 24">
@@ -26,11 +26,13 @@
             </div>
             <div class="app-header-right">
                 <button class="checktask" id="checkTasks">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256">
-                        <path d="M168,80a8,8,0,0,1-8-8V48H96V72a8,8,0,0,1-16,0V48H64a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64A16,16,0,0,0,192,48H176V72A8,8,0,0,1,168,80ZM128,152a8,8,0,0,1-5.66-2.34l-24-24a8,8,0,1,1,11.32-11.32L128,132.69l37.34-37.35a8,8,0,0,1,11.32,11.32l-40,40A8,8,0,0,1,128,152Z"/>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                        viewBox="0 0 256 256">
+                        <path
+                            d="M168,80a8,8,0,0,1-8-8V48H96V72a8,8,0,0,1-16,0V48H64a16,16,0,0,0-16,16V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64A16,16,0,0,0,192,48H176V72A8,8,0,0,1,168,80ZM128,152a8,8,0,0,1-5.66-2.34l-24-24a8,8,0,1,1,11.32-11.32L128,132.69l37.34-37.35a8,8,0,0,1,11.32,11.32l-40,40A8,8,0,0,1,128,152Z" />
                     </svg>
                 </button>
-                
+
                 <!-- Modal for Passed Deadlines -->
                 <div id="passedDeadlinesModal" class="modal">
                     <div class="modal-content">
@@ -789,6 +791,19 @@
                 audio.currentTime = 0; // Reset audio to start
             }
         }
+
+        document.getElementById("searchBox").addEventListener("input", function () {
+            let filter = this.value.toLowerCase();
+            let projectBoxes = document.querySelectorAll(".project-box");
+
+            projectBoxes.forEach(box => {
+                let taskTitle = box.querySelector(".box-content-header").textContent.toLowerCase();
+
+                // Show only if the task title matches the search input
+                box.style.display = taskTitle.includes(filter) ? "block" : "none";
+            });
+        });
+
 
     });
 
