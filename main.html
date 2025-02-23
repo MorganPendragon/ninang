@@ -727,8 +727,13 @@
         document.getElementById('checkTasks').addEventListener('click', async () => {
             const tasks = await fetchTasksWithPassedDeadlines();
             displayPassedDeadlines(tasks);
+
+            // Only play the alert sound if there are tasks with passed deadlines
+            if (tasks.length > 0) {
+                playAlertSound();
+            }
+
             passedDeadlinesModal.style.display = 'flex';
-            playAlertSound();
         });
 
         // Close modal when the close button is clicked
@@ -780,9 +785,12 @@
         }
 
         function playAlertSound() {
-            audio = new Audio('./sounds/alert.mp3');
-            audio.loop = true; // Loop the sound until stopped
-            audio.play().catch(error => console.error('Audio play error:', error));
+            // Only play the sound if there are tasks with passed deadlines
+            if (passedDeadlinesList.children.length > 0) {
+                audio = new Audio('./sounds/alert.mp3');
+                audio.loop = true; // Loop the sound until stopped
+                audio.play().catch(error => console.error('Audio play error:', error));
+            }
         }
 
         function stopAlertSound() {
