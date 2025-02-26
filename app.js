@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function () {
     const supabaseUrl = 'https://hddkqyxhojtgvlautvzx.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkZGtxeXhob2p0Z3ZsYXV0dnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg1NTI4ODUsImV4cCI6MjA1NDEyODg4NX0.4FAo2vDcCCjgDACSnJXiDaA_gktK5XgoYTuOPcIG2Cg'; // Replace with your API key';
@@ -242,41 +243,40 @@ document.addEventListener('DOMContentLoaded', function () {
         subTasks.sort((a, b) => a.order - b.order);
 
         let subTaskHtml = subTasks.length > 0 ? `<p>Subtasks:</p><ul>${subTasks.map(subTask => `
-            <li>
-                <input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}' ${subTask.completed ? 'checked' : ''}>
-                ${subTask.subtask_name}
-                <button class='check-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>✅</button>
-                <button class='delete-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>❌</button>
-            </li>
-        `).join('')}</ul>` : "";
+        <li>
+            <input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}' ${subTask.completed ? 'checked' : ''}>
+            ${subTask.subtask_name}
+           
+        </li>
+    `).join('')}</ul>` : "";
 
         let daysLeftText = calculateDaysLeft(dueDate);
 
         projectBox.innerHTML = `
-            <button class="edit-task" data-task-id="${taskId}">✏️</button>
-            <button class='delete-task' data-task-id='${taskId}'>❌</button>
-            <div class="project-box-content-header">
-                <p class="box-content-header">${taskName}</p>
-                <p class="box-content-subheader">${priority}</p>
+        <button class="edit-task" data-task-id="${taskId}">✏️</button>
+        <button class='delete-task' data-task-id='${taskId}'>❌</button>
+        <div class="project-box-content-header">
+            <p class="box-content-header">${taskName}</p>
+            <p class="box-content-subheader">${priority}</p>
+        </div>
+        <div class="box-progress-wrapper">
+            <p class="box-progress-header">Progress</p>
+            <div class="box-progress-bar">
+                <span class="box-progress" data-task-id='${taskId}' style="width: ${progressPercentage}%; background-color: ${progressPercentage === 100 ? '#4CAF50' : '#ff942e'}"></span>
             </div>
-            <div class="box-progress-wrapper">
-                <p class="box-progress-header">Progress</p>
-                <div class="box-progress-bar">
-                    <span class="box-progress" data-task-id='${taskId}' style="width: ${progressPercentage}%; background-color: ${progressPercentage === 100 ? '#4CAF50' : '#ff942e'}"></span>
-                </div>
-                <p class="box-progress-percentage" data-task-id='${taskId}'>${progressPercentage}%</p>
+            <p class="box-progress-percentage" data-task-id='${taskId}'>${progressPercentage}%</p>
+        </div>
+        <div class="subtask-list">
+            ${subTaskHtml}
+        </div>
+        <div class="project-box-footer">
+            <div class="days-left" data-task-id='${taskId}' data-due-date='${dueDate}'>
+                ${progressPercentage === 100 ? "Completed" : daysLeftText}
             </div>
-            <div class="subtask-list">
-                ${subTaskHtml}
-            </div>
-            <div class="project-box-footer">
-                <div class="days-left" data-task-id='${taskId}' data-due-date='${dueDate}'>
-                    ${progressPercentage === 100 ? "Completed" : daysLeftText}
-                </div>
-            </div>
-        `;
+        </div>
+    `;
 
-        // Add event listeners for delete, edit, and subtask completion
+        // Add event listeners for delete and edit
         projectBox.querySelector('.delete-task').addEventListener('click', () => deleteTask(taskId));
         projectBox.querySelectorAll('.delete-subtask').forEach(button => {
             button.addEventListener('click', (event) => {
@@ -285,11 +285,11 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        projectBox.querySelectorAll('.check-subtask').forEach(button => {
-            button.addEventListener('click', (event) => {
+        // Add event listener for checkbox changes
+        projectBox.querySelectorAll('.subtask-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (event) => {
                 const subtaskName = event.target.getAttribute('data-subtask');
-                const checkbox = event.target.parentElement.querySelector('.subtask-checkbox');
-                const isCompleted = checkbox.checked;
+                const isCompleted = event.target.checked;
                 toggleSubtaskCompletion(taskId, subtaskName, isCompleted);
             });
         });
@@ -460,24 +460,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     //alarm
 
-    function checkDeadlines(tasks) {
-        let now = new Date();
-    
-        tasks.forEach(task => {
-            let dueDate = new Date(task.due_date);
-            dueDate.setHours(0, 0, 0, 0);
-            now.setHours(0, 0, 0, 0);
-    
-            if (dueDate.getTime() === now.getTime()) {
-                console.log(`Task "${task.task_name}" is due today!`);
-                alert(`Task "${task.task_name}" is due today!`);
-            }
-        });
-    }
-    
-
-    const audio = new Audio('/sounds/alert.mp3');
-    audio.play();
 
     function updateDateTime() {
         const now = new Date();
@@ -496,7 +478,105 @@ document.addEventListener('DOMContentLoaded', function () {
 
     setInterval(fetchTasks, 3600000);
     setTimeout(() => {
-        alert(`A task is past due!`);
     }, 3);
-    
+
+    let audio; // Declare audio globally so we can stop it later
+
+    const passedDeadlinesModal = document.getElementById('passedDeadlinesModal');
+    const closePassedDeadlinesModal = passedDeadlinesModal.querySelector('.close-modal');
+    const passedDeadlinesList = document.getElementById('passedDeadlinesList');
+
+    // Open modal when "Check Status" button is clicked
+    document.getElementById('checkTasks').addEventListener('click', async () => {
+        const tasks = await fetchTasksWithPassedDeadlines();
+        displayPassedDeadlines(tasks);
+
+        // Only play the alert sound if there are tasks with passed deadlines
+        if (tasks.length > 0) {
+            playAlertSound();
+        }
+
+        passedDeadlinesModal.style.display = 'flex';
+    });
+
+    // Close modal when the close button is clicked
+    closePassedDeadlinesModal.addEventListener('click', () => {
+        passedDeadlinesModal.style.display = 'none';
+        stopAlertSound();
+    });
+
+    // Close modal when clicking outside the modal
+    window.addEventListener('click', (event) => {
+        if (event.target === passedDeadlinesModal) {
+            passedDeadlinesModal.style.display = 'none';
+            stopAlertSound();
+        }
+    });
+
+    async function fetchTasksWithPassedDeadlines() {
+        const now = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        const { data: tasks, error } = await database
+            .from('tasks')
+            .select('*')
+            .lt('due_date', now); // Fetch tasks with due dates before today
+
+        if (error) {
+            console.error('Error fetching tasks with passed deadlines:', error);
+            return [];
+        }
+
+        return tasks;
+    }
+
+    function displayPassedDeadlines(tasks) {
+        passedDeadlinesList.innerHTML = ''; // Clear the list
+        if (tasks.length === 0) {
+            passedDeadlinesList.innerHTML = '<p>No tasks with passed deadlines.</p>';
+            return;
+        }
+
+        tasks.forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.classList.add('task-item');
+            taskElement.innerHTML = `
+            <p><strong>${task.task_name}</strong></p>
+            <p>Due Date: ${task.due_date}</p>
+            <p>Priority: ${task.priority}</p>
+        `;
+            passedDeadlinesList.appendChild(taskElement);
+        });
+    }
+
+    function playAlertSound() {
+        // Only play the sound if there are tasks with passed deadlines
+        if (passedDeadlinesList.children.length > 0) {
+            audio = new Audio('./sounds/alert.mp3');
+            audio.loop = true; // Loop the sound until stopped
+            audio.play().catch(error => console.error('Audio play error:', error));
+        }
+    }
+
+    function stopAlertSound() {
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0; // Reset audio to start
+        }
+    }
+
+    document.getElementById("searchBox").addEventListener("input", function () {
+        let filter = this.value.toLowerCase();
+        let projectBoxes = document.querySelectorAll(".project-box");
+
+        projectBoxes.forEach(box => {
+            let taskTitle = box.querySelector(".box-content-header").textContent.toLowerCase();
+
+            // Show only if the task title matches the search input
+            box.style.display = taskTitle.includes(filter) ? "block" : "none";
+        });
+    });
+
+
 });
+
+
+

@@ -479,41 +479,40 @@
             subTasks.sort((a, b) => a.order - b.order);
 
             let subTaskHtml = subTasks.length > 0 ? `<p>Subtasks:</p><ul>${subTasks.map(subTask => `
-            <li>
-                <input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}' ${subTask.completed ? 'checked' : ''}>
-                ${subTask.subtask_name}
-                <button class='check-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>✅</button>
-                <button class='delete-subtask' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}'>❌</button>
-            </li>
-        `).join('')}</ul>` : "";
+        <li>
+            <input type='checkbox' class='subtask-checkbox' data-task-id='${taskId}' data-subtask='${subTask.subtask_name}' ${subTask.completed ? 'checked' : ''}>
+            ${subTask.subtask_name}
+           
+        </li>
+    `).join('')}</ul>` : "";
 
             let daysLeftText = calculateDaysLeft(dueDate);
 
             projectBox.innerHTML = `
-            <button class="edit-task" data-task-id="${taskId}">✏️</button>
-            <button class='delete-task' data-task-id='${taskId}'>❌</button>
-            <div class="project-box-content-header">
-                <p class="box-content-header">${taskName}</p>
-                <p class="box-content-subheader">${priority}</p>
+        <button class="edit-task" data-task-id="${taskId}">✏️</button>
+        <button class='delete-task' data-task-id='${taskId}'>❌</button>
+        <div class="project-box-content-header">
+            <p class="box-content-header">${taskName}</p>
+            <p class="box-content-subheader">${priority}</p>
+        </div>
+        <div class="box-progress-wrapper">
+            <p class="box-progress-header">Progress</p>
+            <div class="box-progress-bar">
+                <span class="box-progress" data-task-id='${taskId}' style="width: ${progressPercentage}%; background-color: ${progressPercentage === 100 ? '#4CAF50' : '#ff942e'}"></span>
             </div>
-            <div class="box-progress-wrapper">
-                <p class="box-progress-header">Progress</p>
-                <div class="box-progress-bar">
-                    <span class="box-progress" data-task-id='${taskId}' style="width: ${progressPercentage}%; background-color: ${progressPercentage === 100 ? '#4CAF50' : '#ff942e'}"></span>
-                </div>
-                <p class="box-progress-percentage" data-task-id='${taskId}'>${progressPercentage}%</p>
+            <p class="box-progress-percentage" data-task-id='${taskId}'>${progressPercentage}%</p>
+        </div>
+        <div class="subtask-list">
+            ${subTaskHtml}
+        </div>
+        <div class="project-box-footer">
+            <div class="days-left" data-task-id='${taskId}' data-due-date='${dueDate}'>
+                ${progressPercentage === 100 ? "Completed" : daysLeftText}
             </div>
-            <div class="subtask-list">
-                ${subTaskHtml}
-            </div>
-            <div class="project-box-footer">
-                <div class="days-left" data-task-id='${taskId}' data-due-date='${dueDate}'>
-                    ${progressPercentage === 100 ? "Completed" : daysLeftText}
-                </div>
-            </div>
-        `;
+        </div>
+    `;
 
-            // Add event listeners for delete, edit, and subtask completion
+            // Add event listeners for delete and edit
             projectBox.querySelector('.delete-task').addEventListener('click', () => deleteTask(taskId));
             projectBox.querySelectorAll('.delete-subtask').forEach(button => {
                 button.addEventListener('click', (event) => {
@@ -522,11 +521,11 @@
                 });
             });
 
-            projectBox.querySelectorAll('.check-subtask').forEach(button => {
-                button.addEventListener('click', (event) => {
+            // Add event listener for checkbox changes
+            projectBox.querySelectorAll('.subtask-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (event) => {
                     const subtaskName = event.target.getAttribute('data-subtask');
-                    const checkbox = event.target.parentElement.querySelector('.subtask-checkbox');
-                    const isCompleted = checkbox.checked;
+                    const isCompleted = event.target.checked;
                     toggleSubtaskCompletion(taskId, subtaskName, isCompleted);
                 });
             });
